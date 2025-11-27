@@ -167,21 +167,15 @@
         <i class="fas fa-check"></i>
     </div>
     
-    <h1>Ticket Gerado com Sucesso!</h1>
+    <h1>Prova Enviada com Sucesso!</h1>
     <p style="color: #7f8c8d; font-size: 16px; margin: 10px 0;">
-        Seu ticket foi criado e você está na fila de atendimento
+        Sua prova foi recebida e está em análise
     </p>
     
     <div class="ticket-code">
-        <div class="ticket-code-label">SEU CÓDIGO DO TICKET</div>
+        <div class="ticket-code-label">CÓDIGO DO SEU ENVIO</div>
         <div class="ticket-code-value">{{ ticket.codigo_ticket }}</div>
     </div>
-    
-    {% if posicao %}
-    <div class="position-badge">
-        <i class="fas fa-users"></i> Posição na Fila: {{ posicao }}
-    </div>
-    {% endif %}
     
     <div class="ticket-info">
         <div class="info-row">
@@ -201,42 +195,34 @@
             <span class="info-value">{{ ticket.demanda.cargo }}</span>
         </div>
         <div class="info-row">
-            <span class="info-label"><i class="fas fa-clock"></i> Gerado em:</span>
+            <span class="info-label"><i class="fas fa-key"></i> Chave PIX:</span>
+            <span class="info-value">{{ ticket.cliente_pix }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label"><i class="fas fa-clock"></i> Enviado em:</span>
             <span class="info-value">{{ ticket.criado_em|date:"d/m/Y H:i" }}</span>
         </div>
         <div class="info-row">
             <span class="info-label"><i class="fas fa-info-circle"></i> Status:</span>
-            <span class="info-value" style="color: #00c0ef;">{{ ticket.get_status_display }}</span>
+            <span class="info-value" style="color: #f39c12;">{{ ticket.get_status_display }}</span>
         </div>
     </div>
     
     <div class="instructions">
-        <h3><i class="fas fa-lightbulb"></i> Instruções Importantes</h3>
+        <h3><i class="fas fa-lightbulb"></i> O que acontece agora?</h3>
         <ul>
             <li><strong>Guarde seu código:</strong> {{ ticket.codigo_ticket }}</li>
-            <li>Você está na posição <strong>{{ posicao }}</strong> da fila</li>
-            <li>Aguarde ser chamado para atendimento</li>
-            <li>Apresente este código quando solicitado</li>
+            <li>Nossa equipe irá <strong>analisar sua prova</strong></li>
+            <li>Se aprovada, você receberá <strong>R$ {{ ticket.demanda.valor_recompensa }}</strong> via PIX</li>
+            <li>O pagamento será enviado para: <strong>{{ ticket.cliente_pix }}</strong></li>
+            <li>Se recusada, você receberá o motivo da recusa</li>
         </ul>
     </div>
     
     <div style="margin-top: 30px;">
-        <button onclick="window.print()" class="btn btn-primary">
-            <i class="fas fa-print"></i> Imprimir Ticket
-        </button>
-        <a href="/" class="btn btn-secondary">
+        <a href="/" class="btn btn-primary">
             <i class="fas fa-home"></i> Voltar ao Início
         </a>
     </div>
 </div>
-
-<script>
-    // Copiar código do ticket
-    function copyTicketCode() {
-        const code = "{{ ticket.codigo_ticket }}";
-        navigator.clipboard.writeText(code).then(() => {
-            alert('Código copiado: ' + code);
-        });
-    }
-</script>
 {% endblock %}

@@ -12,7 +12,7 @@
     }
     
     .concurso-info {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #00a65a 0%, #008d4c 100%);
         color: white;
         padding: 25px;
         border-radius: 12px;
@@ -28,6 +28,12 @@
     .concurso-info p {
         opacity: 0.9;
         margin: 5px 0;
+    }
+    
+    .concurso-info .valor-recompensa {
+        font-size: 32px;
+        font-weight: 700;
+        margin: 15px 0 10px 0;
     }
     
     .form-group {
@@ -114,15 +120,67 @@
         color: #7f8c8d;
         margin-top: 5px;
     }
+    
+    .file-upload {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+        width: 100%;
+    }
+    
+    .file-upload input[type=file] {
+        position: absolute;
+        left: -9999px;
+    }
+    
+    .file-upload-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 50px 20px;
+        border: 2px dashed #e1e8ed;
+        border-radius: 8px;
+        background: #f9fafb;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-align: center;
+    }
+    
+    .file-upload-label:hover {
+        border-color: #667eea;
+        background: #f0f4ff;
+    }
+    
+    .file-upload-label i {
+        font-size: 32px;
+        color: #667eea;
+    }
+    
+    .file-name {
+        margin-top: 10px;
+        padding: 10px;
+        background: #e8f5e9;
+        border-radius: 6px;
+        color: #2e7d32;
+        font-weight: 600;
+        display: none;
+    }
+    
+    .file-name.active {
+        display: block;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="ticket-form-card">
     <div class="concurso-info">
-        <h2>🎫 Gerar Ticket</h2>
+        <h2>💰 Enviar Prova</h2>
         <p><strong>{{ demanda.concurso }}</strong></p>
         <p>Edital: {{ demanda.numero_edital }} | {{ demanda.cargo }}</p>
+        <div class="valor-recompensa">R$ {{ demanda.valor_recompensa }}</div>
+        <p>Você receberá esse valor via PIX se sua prova for aprovada!</p>
     </div>
     
     {% if error %}
@@ -131,7 +189,18 @@
     </div>
     {% endif %}
     
-    <form method="POST" action="/ticket/novo/{{ demanda.id }}/">
+    {% if errors %}
+    <div class="alert alert-error">
+        <i class="fas fa-exclamation-circle"></i>
+        <ul style="margin: 10px 0 0 20px;">
+            {% for erro in errors %}
+            <li>{{ erro }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    
+    <form method="POST" action="/ticket/novo/{{ demanda.id }}/" enctype="multipart/form-data">
         {% csrf_token %}
         
         <div class="form-group">
@@ -152,8 +221,55 @@
             </div>
         </div>
         
+        <div class="form-group">
+            <label for="cliente_pix">
+                Chave PIX <span class="required">*</span>
+            </label>
+            <input 
+                type="text" 
+                id="cliente_pix" 
+                name="cliente_pix" 
+                class="form-control" 
+                placeholder="CPF, E-mail, Telefone ou Chave Aleatória"
+                required
+                value="{{ request.POST.cliente_pix }}"
+            >
+            <div class="help-text">
+                <i class="fas fa-info-circle"></i> Informe sua chave PIX para receber o pagamento
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="arquivo_prova">
+                Arquivo da Prova <span class="required">*</span>
+            </label>
+            <div class="file-upload">
+                <input 
+                    type="file" 
+                    id="arquivo_prova" 
+                    name="arquivo_prova" 
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    required
+                    onchange="updateFileName(this)"
+                >
+                <label for="arquivo_prova" class="file-upload-label">
+                    <div>
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <div style="margin-top: 10px;">
+                            <strong>Clique para selecionar o arquivo</strong>
+                            <div class="help-text">PDF, JPG ou PNG (máx. 10MB)</div>
+                        </div>
+                    </div>
+                </label>
+            </div>
+            <div id="fileName" class="file-name"></div>
+            <div class="help-text">
+                <i class="fas fa-info-circle"></i> Envie uma foto ou PDF da prova que você fez
+            </div>
+        </div>
+        
         <button type="submit" class="btn btn-success">
-            <i class="fas fa-ticket-alt"></i> Gerar Meu Ticket
+            <i class="fas fa-upload"></i> Enviar Prova
         </button>
         
         <a href="/" class="btn btn-secondary">
@@ -161,4 +277,16 @@
         </a>
     </form>
 </div>
+
+<script>
+function updateFileName(input) {
+    const fileName = document.getElementById('fileName');
+    if (input.files && input.files[0]) {
+        fileName.textContent = '📄 ' + input.files[0].name;
+        fileName.classList.add('active');
+    } else {
+        fileName.classList.remove('active');
+    }
+}
+</script>
 {% endblock %}

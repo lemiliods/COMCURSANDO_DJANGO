@@ -6,49 +6,48 @@ from apps.tickets.models import Ticket
 
 def home_view(request):
     """
-    View pública para listagem de concursos.
+    View pública para listagem de concursos disponíveis para envio de provas.
+    Mostra apenas concursos abertos que ainda não têm prova aprovada.
     """
     # Filtros
     search = request.GET.get('search', '')
     banca = request.GET.get('banca', '')
     cargo = request.GET.get('cargo', '')
     
-    # Query base - apenas concursos abertos
+    # Query base - apenas concursos abertos SEM prova aprovada
     demandas = Demanda.objects.filter(status='aberto')
     
-    # Aplicar filtros
+    # Filtrar concursos que NÃO têm prova aprovada ou paga
+    demandas = [d for d in demandas if not d.tem_prova_aprovada]
+    
+    # Aplicar filtros de busca
     if search:
-        demandas = demandas.filter(
-            Q(concurso__icontains=search) |
-            Q(numero_edital__icontains=search) |
-            Q(autarquia__icontains=search)
-        )
+        demandas = [d for d in demandas if (
+            search.lower() in d.concurso.lower() or
+            search.lower() in d.numero_edital.lower() or
+            search.lower() in d.autarquia.lower()
+        )]
     
     if banca:
-        demandas = demandas.filter(banca=banca)
+        demandas = [d for d in demandas if d.banca == banca]
     
     if cargo:
-        demandas = demandas.filter(cargo__icontains=cargo)
-    
-    # Anotar com total de tickets
-    demandas = demandas.annotate(
-        total_tickets=Count('tickets')
-    ).order_by('-criado_em')
+        demandas = [d for d in demandas if cargo.lower() in d.cargo.lower()]
     
     # Lista de bancas para o filtro
     bancas = Demanda.objects.filter(status='aberto').values_list('banca', flat=True).distinct()
     
     # Estatísticas
-    total_concursos = Demanda.objects.filter(status='aberto').count()
-    total_tickets = Ticket.objects.count()
-    tickets_aguardando = Ticket.objects.filter(status='aguardando').count()
+    total_concursos = len(demandas)
+    total_envios = Ticket.objects.count()
+    envios_em_analise = Ticket.objects.filter(status='em_analise').count()
     
     context = {
         'demandas': demandas,
         'bancas': sorted(bancas),
         'total_concursos': total_concursos,
-        'total_tickets': total_tickets,
-        'tickets_aguardando': tickets_aguardando,
+        'total_envios': total_envios,
+        'envios_em_analise': envios_em_analise,
     }
     
     return render(request, 'public/home.html', context)

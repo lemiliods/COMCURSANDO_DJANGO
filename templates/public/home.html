@@ -296,23 +296,23 @@
 {% block content %}
 <!-- Hero Section -->
 <div class="hero">
-    <h1>🎓 Concursos Públicos Disponíveis</h1>
-    <p>Encontre o concurso desejado, gere seu ticket e acompanhe sua posição na fila de atendimento</p>
+    <h1>💰 Compre Provas de Concursos</h1>
+    <p>Envie a prova que você fez e receba via PIX. Rápido, fácil e seguro!</p>
 </div>
 
 <!-- Estatísticas -->
 <div class="stats-bar">
     <div class="stat-item">
         <span class="stat-number">{{ total_concursos }}</span>
-        <span class="stat-label">Concursos Abertos</span>
+        <span class="stat-label">Concursos Disponíveis</span>
     </div>
     <div class="stat-item">
-        <span class="stat-number">{{ total_tickets }}</span>
-        <span class="stat-label">Tickets Gerados</span>
+        <span class="stat-number">{{ total_envios }}</span>
+        <span class="stat-label">Provas Enviadas</span>
     </div>
     <div class="stat-item">
-        <span class="stat-number">{{ tickets_aguardando }}</span>
-        <span class="stat-label">Na Fila</span>
+        <span class="stat-number">{{ envios_em_analise }}</span>
+        <span class="stat-label">Em Análise</span>
     </div>
 </div>
 
@@ -407,23 +407,20 @@
                     <span class="detail-label">Data do Concurso</span>
                     <span class="detail-value">{{ demanda.data_concurso|date:"d/m/Y" }}</span>
                 </div>
+                <div class="detail-item">
+                    <span class="detail-label">💵 Recompensa</span>
+                    <span class="detail-value" style="color: #00a65a;">R$ {{ demanda.valor_recompensa }}</span>
+                </div>
             </div>
             
             <div class="concurso-footer">
                 <div class="fila-info">
-                    <i class="fas fa-users"></i>
-                    <span class="fila-count">{{ demanda.total_tickets }}</span>
-                    <span>tickets na fila</span>
+                    <i class="fas fa-file-alt"></i>
+                    <span>Envie sua prova e receba via PIX</span>
                 </div>
-                {% if demanda.status == 'aberto' %}
                 <a href="/ticket/novo/{{ demanda.id }}/" class="btn btn-success">
-                    <i class="fas fa-ticket-alt"></i> Gerar Ticket
+                    <i class="fas fa-upload"></i> Enviar Prova
                 </a>
-                {% else %}
-                <button class="btn btn-secondary" disabled>
-                    <i class="fas fa-lock"></i> Indisponível
-                </button>
-                {% endif %}
             </div>
         </div>
         {% endfor %}
