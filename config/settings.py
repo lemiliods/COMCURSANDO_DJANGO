@@ -68,7 +68,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],  # Adiciona diretório de templates customizados
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -212,8 +212,8 @@ JAZZMIN_SETTINGS = {
     # Links no menu superior
     "topmenu_links": [
         {"name": "Início", "url": "admin:index", "permissions": ["auth.view_user"]},
-        {"name": "Suporte", "url": "https://github.com/lemiliods/COMCURSANDO_DJANGO", "new_window": True},
-        {"model": "auth.User"},
+        {"name": "Ver Site", "url": "/", "new_window": True},
+        {"name": "Documentação", "url": "https://github.com/lemiliods/COMCURSANDO_DJANGO", "new_window": True},
     ],
     
     # Se mostrar o menu superior
@@ -222,10 +222,26 @@ JAZZMIN_SETTINGS = {
     # Se a navegação é expandida por padrão
     "navigation_expanded": True,
     
-    # Ordem dos apps no menu
-    "order_with_respect_to": ["users", "concursos", "tickets"],
+    # Ocultar apps do menu
+    "hide_apps": [],
     
-    # Ícones customizados
+    # Ocultar modelos do menu
+    "hide_models": [],
+    
+    # Ordem dos apps no menu
+    "order_with_respect_to": ["users", "concursos", "tickets", "auth"],
+    
+    # Menu customizado
+    "custom_links": {
+        "tickets": [{
+            "name": "Relatórios",
+            "url": "admin:tickets_ticket_changelist",
+            "icon": "fas fa-chart-bar",
+            "permissions": ["tickets.view_ticket"]
+        }]
+    },
+    
+    # Ícones customizados para cada modelo
     "icons": {
         "auth": "fas fa-users-cog",
         "auth.user": "fas fa-user",
@@ -239,18 +255,24 @@ JAZZMIN_SETTINGS = {
     "default_icon_parents": "fas fa-chevron-circle-right",
     "default_icon_children": "fas fa-circle",
     
-    # Temas de cores disponíveis
+    # Construtor de UI
     "show_ui_builder": False,
     
-    # Tema padrão
+    # Formato dos formulários
     "changeform_format": "horizontal_tabs",
     "changeform_format_overrides": {
         "auth.user": "collapsible",
         "auth.group": "vertical_tabs",
     },
     
-    # Cores do tema
-    "theme": "flatly",  # Opções: default, darkly, flatly, journal, litera, lux, materia, minty, pulse, sandstone, simplex, slate, solar, spacelab, superhero, united, yeti
+    # Tema de cores Bootstrap
+    "theme": "flatly",
+    
+    # Se permitir dark mode
+    "dark_mode_theme": None,
+    
+    # Linguagem e localização
+    "language_chooser": False,
 }
 
 JAZZMIN_UI_TWEAKS = {
@@ -260,7 +282,7 @@ JAZZMIN_UI_TWEAKS = {
     "brand_small_text": False,
     "brand_colour": "navbar-primary",
     "accent": "accent-primary",
-    "navbar": "navbar-dark",
+    "navbar": "navbar-dark navbar-primary",
     "no_navbar_border": False,
     "navbar_fixed": True,
     "layout_boxed": False,

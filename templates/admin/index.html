@@ -1,0 +1,373 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .dashboard-stats {
+        margin: 20px 0;
+    }
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .stat-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    .stat-icon {
+        font-size: 32px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+    .stat-number {
+        font-size: 36px;
+        font-weight: bold;
+        color: #333;
+        margin: 10px 0;
+    }
+    .stat-label {
+        color: #6c757d;
+        font-size: 14px;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+    .stat-change {
+        font-size: 12px;
+        margin-top: 5px;
+    }
+    .stat-change.positive {
+        color: #28a745;
+    }
+    .stat-change.negative {
+        color: #dc3545;
+    }
+    .quick-actions {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .quick-actions h3 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        color: #333;
+        font-size: 18px;
+    }
+    .action-btn {
+        display: inline-block;
+        padding: 10px 20px;
+        margin: 5px;
+        background: #007bff;
+        color: white !important;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: background 0.2s;
+        font-weight: 500;
+    }
+    .action-btn:hover {
+        background: #0056b3;
+        text-decoration: none;
+    }
+    .action-btn.success {
+        background: #28a745;
+    }
+    .action-btn.success:hover {
+        background: #1e7e34;
+    }
+    .action-btn.warning {
+        background: #ffc107;
+        color: #000 !important;
+    }
+    .action-btn.warning:hover {
+        background: #e0a800;
+    }
+    .recent-activity {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .recent-activity h3 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        color: #333;
+        font-size: 18px;
+    }
+    .activity-item {
+        padding: 12px;
+        border-left: 3px solid #007bff;
+        margin-bottom: 10px;
+        background: #f8f9fa;
+        border-radius: 0 5px 5px 0;
+    }
+    .activity-time {
+        font-size: 12px;
+        color: #6c757d;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    .status-aguardando {
+        background: #17a2b8;
+        color: white;
+    }
+    .status-atendendo {
+        background: #ffc107;
+        color: #000;
+    }
+    .status-finalizado {
+        background: #28a745;
+        color: white;
+    }
+    .status-aberto {
+        background: #28a745;
+        color: white;
+    }
+    .chart-container {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .progress-bar-custom {
+        height: 8px;
+        border-radius: 4px;
+        background: #e9ecef;
+        margin-top: 10px;
+        overflow: hidden;
+    }
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #007bff, #0056b3);
+        transition: width 0.3s;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-stats">
+    <div class="row">
+        <!-- Total de Tickets -->
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div>
+                        <div class="stat-label">Total de Tickets</div>
+                        <div class="stat-number">{{ total_tickets }}</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i> {{ tickets_hoje }} hoje
+                        </div>
+                    </div>
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tickets Aguardando -->
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div>
+                        <div class="stat-label">Aguardando</div>
+                        <div class="stat-number" style="color: #17a2b8;">{{ tickets_aguardando }}</div>
+                        <div class="stat-change">
+                            <i class="fas fa-clock"></i> Na fila
+                        </div>
+                    </div>
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <i class="fas fa-hourglass-half"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Concursos Abertos -->
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div>
+                        <div class="stat-label">Concursos Abertos</div>
+                        <div class="stat-number" style="color: #28a745;">{{ concursos_abertos }}</div>
+                        <div class="stat-change">
+                            <i class="fas fa-graduation-cap"></i> Ativos
+                        </div>
+                    </div>
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Usuários Ativos -->
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div>
+                        <div class="stat-label">Usuários Ativos</div>
+                        <div class="stat-number" style="color: #007bff;">{{ usuarios_ativos }}</div>
+                        <div class="stat-change">
+                            <i class="fas fa-users"></i> Cadastrados
+                        </div>
+                    </div>
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações Rápidas -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="quick-actions">
+                <h3><i class="fas fa-bolt"></i> Ações Rápidas</h3>
+                <a href="{% url 'admin:tickets_ticket_add' %}" class="action-btn success">
+                    <i class="fas fa-plus"></i> Novo Ticket
+                </a>
+                <a href="{% url 'admin:concursos_demanda_add' %}" class="action-btn">
+                    <i class="fas fa-graduation-cap"></i> Novo Concurso
+                </a>
+                <a href="{% url 'admin:users_adminuser_add' %}" class="action-btn warning">
+                    <i class="fas fa-user-plus"></i> Novo Usuário
+                </a>
+                <a href="{% url 'admin:tickets_ticket_changelist' %}" class="action-btn">
+                    <i class="fas fa-list"></i> Ver Todos os Tickets
+                </a>
+            </div>
+
+            <!-- Estatísticas por Status -->
+            <div class="chart-container">
+                <h3><i class="fas fa-chart-pie"></i> Tickets por Status</h3>
+                <div style="margin-top: 20px;">
+                    <div style="margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span><span class="status-badge status-aguardando">Aguardando</span></span>
+                            <strong>{{ tickets_aguardando }} ({{ percent_aguardando }}%)</strong>
+                        </div>
+                        <div class="progress-bar-custom">
+                            <div class="progress-fill" style="width: {{ percent_aguardando }}%; background: linear-gradient(90deg, #17a2b8, #138496);"></div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span><span class="status-badge status-atendendo">Atendendo</span></span>
+                            <strong>{{ tickets_atendendo }} ({{ percent_atendendo }}%)</strong>
+                        </div>
+                        <div class="progress-bar-custom">
+                            <div class="progress-fill" style="width: {{ percent_atendendo }}%; background: linear-gradient(90deg, #ffc107, #e0a800);"></div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span><span class="status-badge status-finalizado">Finalizado</span></span>
+                            <strong>{{ tickets_finalizados }} ({{ percent_finalizados }}%)</strong>
+                        </div>
+                        <div class="progress-bar-custom">
+                            <div class="progress-fill" style="width: {{ percent_finalizados }}%; background: linear-gradient(90deg, #28a745, #1e7e34);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Atividade Recente -->
+        <div class="col-md-4">
+            <div class="recent-activity">
+                <h3><i class="fas fa-history"></i> Últimos Tickets</h3>
+                {% for ticket in ultimos_tickets %}
+                <div class="activity-item">
+                    <strong>{{ ticket.codigo_ticket }}</strong>
+                    <div style="font-size: 13px; color: #555; margin: 5px 0;">
+                        {{ ticket.cliente_nome }}
+                    </div>
+                    <span class="status-badge status-{{ ticket.status }}">
+                        {{ ticket.get_status_display }}
+                    </span>
+                    <div class="activity-time">
+                        <i class="far fa-clock"></i> {{ ticket.criado_em|timesince }} atrás
+                    </div>
+                </div>
+                {% empty %}
+                <p style="color: #6c757d; text-align: center; padding: 20px;">
+                    Nenhum ticket registrado ainda
+                </p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Concursos em Destaque -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="chart-container">
+                <h3><i class="fas fa-star"></i> Concursos em Destaque</h3>
+                <div class="table-responsive" style="margin-top: 15px;">
+                    <table class="table table-hover">
+                        <thead style="background: #f8f9fa;">
+                            <tr>
+                                <th>Concurso</th>
+                                <th>Banca</th>
+                                <th>Cargo</th>
+                                <th>Data</th>
+                                <th>Status</th>
+                                <th style="text-align: center;">Tickets</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for demanda in top_demandas %}
+                            <tr>
+                                <td><strong>{{ demanda.concurso }}</strong></td>
+                                <td>{{ demanda.banca }}</td>
+                                <td>{{ demanda.cargo }}</td>
+                                <td>{{ demanda.data_concurso|date:"d/m/Y" }}</td>
+                                <td>
+                                    <span class="status-badge status-{{ demanda.status }}">
+                                        {{ demanda.get_status_display }}
+                                    </span>
+                                </td>
+                                <td style="text-align: center;">
+                                    <strong style="color: #007bff;">{{ demanda.total_tickets }}</strong>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: #6c757d; padding: 30px;">
+                                    Nenhum concurso cadastrado ainda
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
