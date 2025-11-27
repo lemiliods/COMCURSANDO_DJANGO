@@ -5,28 +5,31 @@ from datetime import datetime
 
 class Ticket(models.Model):
     """
-    Modelo para gerenciar tickets de atendimento vinculados a demandas.
-    Cada ticket representa um cliente na fila para uma demanda específica.
+    Modelo para gerenciar envio de provas de concursos.
+    Cada ticket representa uma submissão de prova por um cliente.
     """
     
     STATUS_CHOICES = [
-        ('aguardando', 'Aguardando'),
-        ('em_atendimento', 'Em Atendimento'),
-        ('finalizado', 'Finalizado'),
-        ('cancelado', 'Cancelado'),
+        ('aguardando', 'Aguardando Análise'),
+        ('em_analise', 'Em Análise'),
+        ('aprovado', 'Aprovado - Aguardando Pagamento'),
+        ('pago', 'Pago e Concluído'),
+        ('recusado', 'Recusado'),
     ]
     
     demanda = models.ForeignKey(
         Demanda,
         on_delete=models.CASCADE,
         related_name='tickets',
-        verbose_name='Demanda'
+        verbose_name='Concurso'
     )
     cliente_nome = models.CharField(max_length=255, verbose_name='Nome do Cliente')
+    cliente_pix = models.CharField(max_length=255, verbose_name='Chave PIX', help_text='CPF, e-mail, telefone ou chave aleatória')
+    arquivo_prova = models.FileField(upload_to='provas/%Y/%m/', verbose_name='Arquivo da Prova', help_text='PDF ou imagem da prova')
     codigo_ticket = models.CharField(
         max_length=12, 
         unique=True, 
-        verbose_name='Código do Ticket'
+        verbose_name='Código do Envio'
     )
     status = models.CharField(
         max_length=20,
@@ -34,21 +37,26 @@ class Ticket(models.Model):
         default='aguardando',
         verbose_name='Status'
     )
-    criado_em = models.DateTimeField(auto_now_add=True, verbose_name='Criado em')
-    finalizado_em = models.DateTimeField(null=True, blank=True, verbose_name='Finalizado em')
+    observacoes_admin = models.TextField(blank=True, null=True, verbose_name='Observações do Admin', help_text='Motivo da recusa ou observações')
+    valor_pago = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name='Valor Pago')
+    criado_em = models.DateTimeField(auto_now_add=True, verbose_name='Enviado em')
+    analisado_em = models.DateTimeField(null=True, blank=True, verbose_name='Analisado em')
+    pago_em = models.DateTimeField(null=True, blank=True, verbose_name='Pago em')
+    atualizado_em = models.DateTimeField(auto_now=True, verbose_name='Atualizado em')
     
     class Meta:
         db_table = 'tickets'
-        verbose_name = 'Ticket'
-        verbose_name_plural = 'Tickets'
-        ordering = ['criado_em']
+        verbose_name = 'Envio de Prova'
+        verbose_name_plural = 'Envios de Provas'
+        ordering = ['-criado_em']
         indexes = [
             models.Index(fields=['demanda', 'status']),
             models.Index(fields=['codigo_ticket']),
+            models.Index(fields=['status']),
         ]
     
     def __str__(self):
-        return f"{self.codigo_ticket} - {self.cliente_nome}"
+        return f"{self.codigo_ticket} - {self.cliente_nome} ({self.demanda.concurso})"
     
     def save(self, *args, **kwargs):
         """
@@ -75,26 +83,3 @@ class Ticket(models.Model):
             self.codigo_ticket = f"{prefixo}{novo_seq:04d}"
         
         super().save(*args, **kwargs)
-    
-    @property
-    def posicao_fila(self):
-        """
-        Calcula a posição do ticket na fila da demanda.
-        Considera apenas tickets aguardando, ordenados por data de criação.
-        """
-        if self.status != 'aguardando':
-            return None
-        
-        tickets_aguardando = Ticket.objects.filter(
-            demanda=self.demanda,
-            status='aguardando',
-            criado_em__lte=self.criado_em
-        ).order_by('criado_em')
-        
-        posicao = 1
-        for ticket in tickets_aguardando:
-            if ticket.id == self.id:
-                return posicao
-            posicao += 1
-        
-        return None
