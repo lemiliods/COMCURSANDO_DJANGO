@@ -33,6 +33,7 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(','
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',  # Deve vir ANTES do django.contrib.admin
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -175,3 +176,111 @@ CORS_ALLOW_CREDENTIALS = True
 # JWT Settings
 JWT_SECRET_KEY = config('JWT_SECRET_KEY', default=SECRET_KEY)
 JWT_EXPIRATION_HOURS = config('JWT_EXPIRATION_HOURS', default=8, cast=int)
+
+# Jazzmin Settings (Admin Theme)
+JAZZMIN_SETTINGS = {
+    # Título da janela
+    "site_title": "COMCURSANDO Admin",
+    
+    # Título no topo
+    "site_header": "COMCURSANDO",
+    
+    # Título na página de login
+    "site_brand": "Sistema de Gestão de Filas",
+    
+    # Logo no topo (pequeno)
+    "site_logo": None,
+    
+    # Logo na tela de login
+    "login_logo": None,
+    
+    # CSS customizado
+    "custom_css": None,
+    
+    # JS customizado
+    "custom_js": None,
+    
+    # Ícone do site (favicon)
+    "site_icon": None,
+    
+    # Texto de boas-vindas na tela de login
+    "welcome_sign": "Bem-vindo ao COMCURSANDO",
+    
+    # Texto de copyright
+    "copyright": "COMCURSANDO - Sistema de Gestão de Filas",
+    
+    # Links no menu superior
+    "topmenu_links": [
+        {"name": "Início", "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"name": "Suporte", "url": "https://github.com/lemiliods/COMCURSANDO_DJANGO", "new_window": True},
+        {"model": "auth.User"},
+    ],
+    
+    # Se mostrar o menu superior
+    "show_sidebar": True,
+    
+    # Se a navegação é expandida por padrão
+    "navigation_expanded": True,
+    
+    # Ordem dos apps no menu
+    "order_with_respect_to": ["users", "concursos", "tickets"],
+    
+    # Ícones customizados
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "auth.Group": "fas fa-users",
+        "users.AdminUser": "fas fa-user-shield",
+        "concursos.Demanda": "fas fa-graduation-cap",
+        "tickets.Ticket": "fas fa-ticket-alt",
+    },
+    
+    # Ícones padrão
+    "default_icon_parents": "fas fa-chevron-circle-right",
+    "default_icon_children": "fas fa-circle",
+    
+    # Temas de cores disponíveis
+    "show_ui_builder": False,
+    
+    # Tema padrão
+    "changeform_format": "horizontal_tabs",
+    "changeform_format_overrides": {
+        "auth.user": "collapsible",
+        "auth.group": "vertical_tabs",
+    },
+    
+    # Cores do tema
+    "theme": "flatly",  # Opções: default, darkly, flatly, journal, litera, lux, materia, minty, pulse, sandstone, simplex, slate, solar, spacelab, superhero, united, yeti
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": "navbar-primary",
+    "accent": "accent-primary",
+    "navbar": "navbar-dark",
+    "no_navbar_border": False,
+    "navbar_fixed": True,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": True,
+    "sidebar": "sidebar-dark-primary",
+    "sidebar_nav_small_text": False,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": False,
+    "sidebar_nav_compact_style": False,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": False,
+    "theme": "flatly",
+    "dark_mode_theme": None,
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success"
+    }
+}
