@@ -10,9 +10,9 @@ class TicketAdmin(admin.ModelAdmin):
     """
     Configuração do admin para Envios de Prova.
     """
-    list_display = ['codigo_ticket_formatado', 'cliente_nome', 'concurso_info', 'pix_info', 'status_badge', 'arquivo_preview', 'valor_info', 'criado_em']
+    list_display = ['codigo_ticket_formatado', 'cliente_nome', 'whatsapp_link', 'concurso_info', 'pix_info', 'status_badge', 'arquivo_preview', 'valor_info', 'criado_em']
     list_filter = ['status', 'demanda__banca', 'criado_em', 'analisado_em', 'pago_em']
-    search_fields = ['codigo_ticket', 'cliente_nome', 'cliente_pix', 'demanda__concurso', 'demanda__numero_edital']
+    search_fields = ['codigo_ticket', 'cliente_nome', 'cliente_whatsapp', 'cliente_pix', 'demanda__concurso', 'demanda__numero_edital']
     ordering = ['-criado_em']
     date_hierarchy = 'criado_em'
     readonly_fields = ['codigo_ticket', 'criado_em', 'atualizado_em', 'analisado_em', 'pago_em']
@@ -21,7 +21,7 @@ class TicketAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('📄 Informações do Envio', {
-            'fields': ('codigo_ticket', 'demanda', 'cliente_nome', 'cliente_pix'),
+            'fields': ('codigo_ticket', 'demanda', 'cliente_nome', 'cliente_whatsapp', 'cliente_pix'),
             'description': 'Dados do cliente e do envio'
         }),
         ('📎 Arquivo da Prova', {
@@ -54,6 +54,17 @@ class TicketAdmin(admin.ModelAdmin):
             obj.demanda.cargo
         )
     concurso_info.short_description = 'Concurso'
+    
+    def whatsapp_link(self, obj):
+        """Exibe link clicável para WhatsApp."""
+        if obj.cliente_whatsapp:
+            return format_html(
+                '<a href="https://wa.me/55{}" target="_blank" style="background: #25D366; color: white; padding: 4px 10px; border-radius: 4px; text-decoration: none; font-size: 11px;"><i class="fab fa-whatsapp"></i> {}</a>',
+                obj.cliente_whatsapp.replace(' ', '').replace('-', '').replace('(', '').replace(')', ''),
+                obj.cliente_whatsapp
+            )
+        return format_html('<span style="color: #6c757d;">-</span>')
+    whatsapp_link.short_description = 'WhatsApp'
     
     def pix_info(self, obj):
         """Exibe a chave PIX."""

@@ -222,6 +222,25 @@
         </div>
         
         <div class="form-group">
+            <label for="cliente_whatsapp">
+                WhatsApp <span class="required">*</span>
+            </label>
+            <input 
+                type="tel" 
+                id="cliente_whatsapp" 
+                name="cliente_whatsapp" 
+                class="form-control" 
+                placeholder="11966149003 (apenas números)"
+                required
+                value="{{ request.POST.cliente_whatsapp }}"
+                maxlength="20"
+            >
+            <div class="help-text">
+                <i class="fas fa-info-circle"></i> Número com DDD, sem espaços ou caracteres especiais
+            </div>
+        </div>
+        
+        <div class="form-group">
             <label for="cliente_pix">
                 Chave PIX <span class="required">*</span>
             </label>
