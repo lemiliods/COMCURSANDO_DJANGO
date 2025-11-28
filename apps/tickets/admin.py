@@ -57,20 +57,22 @@ class TicketAdmin(admin.ModelAdmin):
     
     def pix_info(self, obj):
         """Exibe a chave PIX."""
-        return format_html(
-            '<span style="font-family: monospace; font-size: 12px; background: #e8f5e9; color: #2e7d32; padding: 4px 8px; border-radius: 3px;">{}</span>',
-            obj.cliente_pix
-        )
+        if obj.cliente_pix:
+            return format_html(
+                '<span style="font-family: monospace; font-size: 12px; background: #e8f5e9; color: #2e7d32; padding: 4px 8px; border-radius: 3px;">{}</span>',
+                obj.cliente_pix
+            )
+        return format_html('<span style="color: #6c757d;">-</span>')
     pix_info.short_description = 'Chave PIX'
     
     def arquivo_preview(self, obj):
         """Exibe preview/link do arquivo."""
-        if obj.arquivo_prova:
+        if obj.arquivo_prova and hasattr(obj.arquivo_prova, 'url'):
             return format_html(
                 '<a href="{}" target="_blank" style="background: #007bff; color: white; padding: 4px 12px; border-radius: 4px; text-decoration: none; font-size: 11px;">📄 Ver Prova</a>',
                 obj.arquivo_prova.url
             )
-        return format_html('<span style="color: #6c757d;">-</span>')
+        return format_html('<span style="color: #dc3545;">Sem arquivo</span>')
     arquivo_preview.short_description = 'Arquivo'
     
     def valor_info(self, obj):
