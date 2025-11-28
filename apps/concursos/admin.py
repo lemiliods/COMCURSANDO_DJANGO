@@ -83,13 +83,15 @@ class DemandaAdmin(admin.ModelAdmin):
     def valor_badge(self, obj):
         """Exibe o valor da recompensa."""
         try:
+            logger.info(f"valor_badge - ID: {obj.id}, valor_recompensa: {obj.valor_recompensa}, tipo: {type(obj.valor_recompensa)}")
             valor = obj.valor_recompensa if obj.valor_recompensa is not None else 50.00
+            logger.info(f"valor_badge - valor final: {valor}")
             return format_html(
                 '<span style="color: #28a745; font-weight: bold; font-size: 13px;">R$ {:.2f}</span>',
                 float(valor)
             )
         except Exception as e:
-            logger.error(f"Erro em valor_badge: {e}", exc_info=True)
+            logger.error(f"Erro em valor_badge - ID: {obj.id}: {e}", exc_info=True)
             return format_html('<span style="color: #6c757d;">R$ 50.00</span>')
     valor_badge.short_description = 'Recompensa'
     valor_badge.admin_order_field = 'valor_recompensa'
