@@ -48,8 +48,8 @@ class DemandaAdmin(admin.ModelAdmin):
         """Exibe badge colorido do status."""
         cores = {
             'aberto': '#28a745',
-            'em_andamento': '#ffc107',
-            'encerrado': '#dc3545',
+            'em_analise': '#ffc107',
+            'concluido': '#007bff',
             'cancelado': '#6c757d'
         }
         cor = cores.get(obj.status, '#007bff')
