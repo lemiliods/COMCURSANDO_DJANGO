@@ -62,17 +62,20 @@ class DemandaAdmin(admin.ModelAdmin):
     
     def valor_badge(self, obj):
         """Exibe o valor da recompensa."""
-        return format_html(
-            '<span style="color: #28a745; font-weight: bold; font-size: 13px;">R$ {}</span>',
-            obj.valor_recompensa
-        )
+        if obj.valor_recompensa:
+            return format_html(
+                '<span style="color: #28a745; font-weight: bold; font-size: 13px;">R$ {}</span>',
+                obj.valor_recompensa
+            )
+        return format_html('<span style="color: #6c757d;">-</span>')
     valor_badge.short_description = 'Recompensa'
     valor_badge.admin_order_field = 'valor_recompensa'
     
     def total_tickets(self, obj):
         """Exibe total de tickets associados."""
-        total = obj.tickets.count()
-        if total > 0:
-            return format_html('<span style="color: #007bff; font-weight: bold;">{} ticket(s)</span>', total)
+        if obj.pk:  # Só conta se já foi salvo
+            total = obj.tickets.count()
+            if total > 0:
+                return format_html('<span style="color: #007bff; font-weight: bold;">{} ticket(s)</span>', total)
         return format_html('<span style="color: #6c757d;">Nenhum</span>')
     total_tickets.short_description = 'Tickets'
