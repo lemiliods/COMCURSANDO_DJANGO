@@ -39,6 +39,11 @@ class Demanda(models.Model):
     def __str__(self):
         return f"{self.concurso} - {self.numero_edital}"
     
+    def save(self, *args, **kwargs):
+        """Override save para debug"""
+        print(f"DEBUG: Salvando Demanda - valor_recompensa = {self.valor_recompensa}")
+        super().save(*args, **kwargs)
+    
     @property
     def tem_prova_aprovada(self):
         """Verifica se já tem alguma prova aprovada/paga"""
