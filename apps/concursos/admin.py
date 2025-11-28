@@ -8,7 +8,7 @@ class DemandaAdmin(admin.ModelAdmin):
     """
     Configuração do admin para Demanda.
     """
-    list_display = ['concurso_formatado', 'numero_edital', 'banca', 'cargo', 'data_concurso', 'status_badge', 'total_tickets', 'criado_em']
+    list_display = ['concurso_formatado', 'numero_edital', 'banca', 'cargo', 'valor_badge', 'data_concurso', 'status_badge', 'total_tickets', 'criado_em']
     list_filter = ['status', 'banca', 'data_concurso', 'criado_em']
     search_fields = ['concurso', 'numero_edital', 'cargo', 'autarquia', 'banca']
     ordering = ['-criado_em']
@@ -22,6 +22,10 @@ class DemandaAdmin(admin.ModelAdmin):
         }),
         ('👥 Detalhes do Cargo', {
             'fields': ('cargo', 'autarquia')
+        }),
+        ('💰 Recompensa', {
+            'fields': ('valor_recompensa',),
+            'description': 'Valor a pagar por prova aprovada (em Reais)'
         }),
         ('📅 Agendamento e Status', {
             'fields': ('data_concurso', 'status')
@@ -55,6 +59,15 @@ class DemandaAdmin(admin.ModelAdmin):
         )
     status_badge.short_description = 'Status'
     status_badge.admin_order_field = 'status'
+    
+    def valor_badge(self, obj):
+        """Exibe o valor da recompensa."""
+        return format_html(
+            '<span style="color: #28a745; font-weight: bold; font-size: 13px;">R$ {}</span>',
+            obj.valor_recompensa
+        )
+    valor_badge.short_description = 'Recompensa'
+    valor_badge.admin_order_field = 'valor_recompensa'
     
     def total_tickets(self, obj):
         """Exibe total de tickets associados."""
