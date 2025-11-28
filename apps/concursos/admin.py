@@ -1,6 +1,9 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from .models import Demanda
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @admin.register(Demanda)
@@ -14,6 +17,15 @@ class DemandaAdmin(admin.ModelAdmin):
     ordering = ['-criado_em']
     date_hierarchy = 'criado_em'
     list_per_page = 20
+    
+    def changelist_view(self, request, extra_context=None):
+        """Override para adicionar logging e capturar erros."""
+        try:
+            logger.info(f"Acessando changelist_view para Demanda - User: {request.user}")
+            return super().changelist_view(request, extra_context)
+        except Exception as e:
+            logger.error(f"ERRO no changelist_view: {type(e).__name__}: {str(e)}", exc_info=True)
+            raise
     
     fieldsets = (
         ('📋 Informações do Concurso', {
@@ -40,23 +52,31 @@ class DemandaAdmin(admin.ModelAdmin):
     
     def concurso_formatado(self, obj):
         """Exibe o concurso em negrito."""
-        return format_html('<strong>{}</strong>', obj.concurso)
+        try:
+            return format_html('<strong>{}</strong>', obj.concurso)
+        except Exception as e:
+            logger.error(f"Erro em concurso_formatado: {e}", exc_info=True)
+            return "Erro"
     concurso_formatado.short_description = 'Concurso'
     concurso_formatado.admin_order_field = 'concurso'
     
     def status_badge(self, obj):
         """Exibe badge colorido do status."""
-        cores = {
-            'aberto': '#28a745',
-            'em_analise': '#ffc107',
-            'concluido': '#007bff',
-            'cancelado': '#6c757d'
-        }
-        cor = cores.get(obj.status, '#007bff')
-        return format_html(
-            '<span style="background-color: {}; color: white; padding: 3px 10px; border-radius: 3px; font-size: 11px; font-weight: bold;">{}</span>',
-            cor, obj.get_status_display()
-        )
+        try:
+            cores = {
+                'aberto': '#28a745',
+                'em_analise': '#ffc107',
+                'concluido': '#007bff',
+                'cancelado': '#6c757d'
+            }
+            cor = cores.get(obj.status, '#007bff')
+            return format_html(
+                '<span style="background-color: {}; color: white; padding: 3px 10px; border-radius: 3px; font-size: 11px; font-weight: bold;">{}</span>',
+                cor, obj.get_status_display()
+            )
+        except Exception as e:
+            logger.error(f"Erro em status_badge: {e}", exc_info=True)
+            return "Erro"
     status_badge.short_description = 'Status'
     status_badge.admin_order_field = 'status'
     
