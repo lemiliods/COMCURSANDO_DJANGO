@@ -58,9 +58,11 @@ class TicketAdmin(admin.ModelAdmin):
     def whatsapp_link(self, obj):
         """Exibe link clicável para WhatsApp."""
         if obj.cliente_whatsapp:
+            # Remove + do número para o link wa.me
+            numero_limpo = obj.cliente_whatsapp.replace('+', '').replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
             return format_html(
-                '<a href="https://wa.me/55{}" target="_blank" style="background: #25D366; color: white; padding: 4px 10px; border-radius: 4px; text-decoration: none; font-size: 11px;"><i class="fab fa-whatsapp"></i> {}</a>',
-                obj.cliente_whatsapp.replace(' ', '').replace('-', '').replace('(', '').replace(')', ''),
+                '<a href="https://wa.me/{}" target="_blank" style="background: #25D366; color: white; padding: 4px 10px; border-radius: 4px; text-decoration: none; font-size: 11px;"><i class="fab fa-whatsapp"></i> {}</a>',
+                numero_limpo,
                 obj.cliente_whatsapp
             )
         return format_html('<span style="color: #6c757d;">-</span>')

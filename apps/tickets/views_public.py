@@ -58,12 +58,29 @@ def ticket_novo_view(request, demanda_id):
         cliente_pix = request.POST.get('cliente_pix', '').strip()
         arquivo_prova = request.FILES.get('arquivo_prova')
         
+        # Normalizar WhatsApp: adicionar +55 se não tiver código do país
+        if cliente_whatsapp and not cliente_whatsapp.startswith('+'):
+            # Remove caracteres especiais
+            whatsapp_limpo = cliente_whatsapp.replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
+            # Se não começar com 55, adiciona +55
+            if not whatsapp_limpo.startswith('55'):
+                cliente_whatsapp = f'+55{whatsapp_limpo}'
+            else:
+                cliente_whatsapp = f'+{whatsapp_limpo}'
+        
         # Validações
         errors = []
         if not cliente_nome:
             errors.append('Por favor, informe seu nome completo.')
         if not cliente_whatsapp:
             errors.append('Por favor, informe seu WhatsApp.')
+        else:
+            # Validar formato do WhatsApp
+            whatsapp_numeros = cliente_whatsapp.replace('+', '')
+            if not whatsapp_numeros.isdigit():
+                errors.append('WhatsApp deve conter apenas números (código do país + DDD + número).')
+            elif len(whatsapp_numeros) < 12 or len(whatsapp_numeros) > 13:
+                errors.append('WhatsApp inválido. Formato esperado: +5511966149003 (código país + DDD + número)')
         if not cliente_pix:
             errors.append('Por favor, informe sua chave PIX.')
         if not arquivo_prova:

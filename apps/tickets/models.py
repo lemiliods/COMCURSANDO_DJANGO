@@ -24,7 +24,7 @@ class Ticket(models.Model):
         verbose_name='Concurso'
     )
     cliente_nome = models.CharField(max_length=255, verbose_name='Nome do Cliente')
-    cliente_whatsapp = models.CharField(max_length=20, verbose_name='WhatsApp', help_text='Número com DDD (ex: 11966149003)')
+    cliente_whatsapp = models.CharField(max_length=20, verbose_name='WhatsApp', help_text='Número com código do país +55 e DDD (ex: +5511966149003)')
     cliente_pix = models.CharField(max_length=255, verbose_name='Chave PIX', help_text='CPF, e-mail, telefone ou chave aleatória')
     arquivo_prova = models.FileField(upload_to='provas/%Y/%m/', verbose_name='Arquivo da Prova', help_text='PDF ou imagem da prova')
     codigo_ticket = models.CharField(
