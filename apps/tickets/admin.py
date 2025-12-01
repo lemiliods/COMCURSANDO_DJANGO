@@ -3,6 +3,38 @@ from django.utils.html import format_html
 from django.db.models import Count
 from django.utils import timezone
 from .models import Ticket
+import urllib.parse
+
+
+def enviar_notificacao_encerramento(ticket):
+    """
+    Gera link do WhatsApp para notificar participante sobre encerramento da demanda.
+    Retorna URL que pode ser aberta para enviar mensagem via WhatsApp Web.
+    """
+    mensagem = f"""🎯 *COMCURSANDO - Atualização*
+
+Olá, {ticket.cliente_nome.split()[0]}!
+
+Informamos que a demanda do concurso *{ticket.demanda.concurso}* (Edital: {ticket.demanda.numero_edital}) foi encerrada.
+
+📋 *Seu código de envio:* {ticket.codigo_ticket}
+
+✅ Outra prova foi aprovada e selecionada para esta demanda.
+
+Agradecemos muito pela sua disposição em colaborar! 
+Em uma próxima oportunidade será a sua vez. 🚀
+
+Obrigado pela compreensão!
+
+---
+Continue acompanhando nossos concursos disponíveis em:
+https://comcursando.com.br"""
+    
+    mensagem_encoded = urllib.parse.quote(mensagem)
+    numero_limpo = ticket.cliente_whatsapp.replace('+', '').replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
+    whatsapp_url = f"https://wa.me/{numero_limpo}?text={mensagem_encoded}"
+    
+    return whatsapp_url
 
 
 @admin.register(Ticket)
@@ -149,18 +181,63 @@ class TicketAdmin(admin.ModelAdmin):
     recusar_prova.short_description = '✗ Recusar Prova'
     
     def marcar_como_pago(self, request, queryset):
-        """Marca provas aprovadas como pagas."""
+        """
+        Marca provas aprovadas como pagas e notifica outros participantes.
+        Envia mensagem via WhatsApp para todos os outros que tiveram provas recusadas/aguardando.
+        """
         count = 0
+        notificacoes = []
+        
         for ticket in queryset:
             if ticket.status == 'aprovado':
+                # Buscar outros tickets da mesma demanda que NÃO foram aprovados
+                outros_tickets = Ticket.objects.filter(
+                    demanda=ticket.demanda,
+                    status__in=['aguardando', 'em_analise', 'recusado']
+                ).exclude(id=ticket.id)
+                
+                # Marcar ticket como pago
                 ticket.status = 'pago'
                 ticket.pago_em = timezone.now()
                 if not ticket.valor_pago:
                     ticket.valor_pago = ticket.demanda.valor_recompensa
+                
                 # Marcar demanda como concluída
                 ticket.demanda.status = 'concluido'
                 ticket.demanda.save()
                 ticket.save()
+                
+                # Recusar automaticamente os outros tickets e gerar links de notificação
+                for outro_ticket in outros_tickets:
+                    if outro_ticket.status != 'recusado':
+                        outro_ticket.status = 'recusado'
+                        outro_ticket.analisado_em = timezone.now()
+                        outro_ticket.observacoes_admin = 'Demanda encerrada - outra prova foi selecionada'
+                        outro_ticket.save()
+                    
+                    # Gerar link de notificação
+                    if outro_ticket.cliente_whatsapp:
+                        whatsapp_link = enviar_notificacao_encerramento(outro_ticket)
+                        notificacoes.append({
+                            'nome': outro_ticket.cliente_nome,
+                            'codigo': outro_ticket.codigo_ticket,
+                            'link': whatsapp_link
+                        })
+                
                 count += 1
-        self.message_user(request, f'{count} prova(s) marcada(s) como PAGA.')
-    marcar_como_pago.short_description = '💰 Marcar como Pago'
+        
+        # Mensagem de sucesso com links de WhatsApp
+        if notificacoes:
+            msg = f'{count} prova(s) marcada(s) como PAGA. '
+            msg += f'{len(notificacoes)} participante(s) precisam ser notificados. '
+            msg += 'Clique nos links abaixo para enviar as mensagens via WhatsApp:<br><br>'
+            for notif in notificacoes:
+                msg += f'<a href="{notif["link"]}" target="_blank" style="display:inline-block; background:#25D366; color:white; padding:8px 15px; margin:5px; border-radius:5px; text-decoration:none;">📱 {notif["nome"]} ({notif["codigo"]})</a><br>'
+            
+            from django.contrib import messages
+            from django.utils.safestring import mark_safe
+            messages.success(request, mark_safe(msg))
+        else:
+            self.message_user(request, f'{count} prova(s) marcada(s) como PAGA.')
+    
+    marcar_como_pago.short_description = '💰 Marcar como Pago e Notificar'
