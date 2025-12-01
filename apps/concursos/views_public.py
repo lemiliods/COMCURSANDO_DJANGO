@@ -7,15 +7,15 @@ from apps.tickets.models import Ticket
 def home_view(request):
     """
     View pública para listagem de concursos disponíveis para envio de provas.
-    Mostra apenas concursos abertos que ainda não têm prova aprovada.
+    Mostra concursos abertos ou em análise que ainda não têm prova aprovada.
     """
     # Filtros
     search = request.GET.get('search', '')
     banca = request.GET.get('banca', '')
     cargo = request.GET.get('cargo', '')
     
-    # Query base - apenas concursos abertos SEM prova aprovada
-    demandas = Demanda.objects.filter(status='aberto')
+    # Query base - concursos abertos OU em análise (aguardando mais provas)
+    demandas = Demanda.objects.filter(status__in=['aberto', 'em_analise'])
     
     # Filtrar concursos que NÃO têm prova aprovada ou paga
     demandas = [d for d in demandas if not d.tem_prova_aprovada]
@@ -35,7 +35,7 @@ def home_view(request):
         demandas = [d for d in demandas if cargo.lower() in d.cargo.lower()]
     
     # Lista de bancas para o filtro
-    bancas = Demanda.objects.filter(status='aberto').values_list('banca', flat=True).distinct()
+    bancas = Demanda.objects.filter(status__in=['aberto', 'em_analise']).values_list('banca', flat=True).distinct()
     
     # Estatísticas
     total_concursos = len(demandas)

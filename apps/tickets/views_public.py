@@ -115,9 +115,8 @@ def ticket_novo_view(request, demanda_id):
         # Enviar mensagem WhatsApp
         enviar_mensagem_whatsapp(cliente_whatsapp, ticket)
         
-        # Atualizar status da demanda para em_analise
-        demanda.status = 'em_analise'
-        demanda.save()
+        # NÃO atualizar status da demanda - deixar como "aberto" para receber mais provas
+        # O status só muda quando uma prova for aprovada/paga
         
         return redirect('ticket_success', ticket_id=ticket.id)
     
