@@ -81,6 +81,24 @@ def ticket_novo_view(request, demanda_id):
                 errors.append('WhatsApp deve conter apenas números (código do país + DDD + número).')
             elif len(whatsapp_numeros) < 12 or len(whatsapp_numeros) > 13:
                 errors.append('WhatsApp inválido. Formato esperado: +5511966149003 (código país + DDD + número)')
+            
+            # VERIFICAR SE JÁ EXISTE ENVIO DESTE WHATSAPP PARA ESTA DEMANDA
+            envio_existente = Ticket.objects.filter(
+                demanda=demanda,
+                cliente_whatsapp=cliente_whatsapp,
+                status__in=['aguardando', 'em_analise', 'aprovado']
+            ).first()
+            
+            if envio_existente:
+                # Calcular posição na fila
+                posicao = Ticket.objects.filter(
+                    demanda=demanda,
+                    status__in=['aguardando', 'em_analise'],
+                    criado_em__lt=envio_existente.criado_em
+                ).count() + 1
+                
+                errors.append(f'Você já enviou uma prova para este concurso! Código: {envio_existente.codigo_ticket}. Posição na fila: {posicao}º')
+        
         if not cliente_pix:
             errors.append('Por favor, informe sua chave PIX.')
         if not arquivo_prova:
@@ -128,9 +146,24 @@ def ticket_novo_view(request, demanda_id):
 def ticket_success_view(request, ticket_id):
     """
     View de sucesso após enviar prova.
+    Mostra a posição do ticket na fila.
     """
     ticket = get_object_or_404(Ticket, id=ticket_id)
     
+    # Calcular posição na fila
+    posicao_fila = Ticket.objects.filter(
+        demanda=ticket.demanda,
+        status__in=['aguardando', 'em_analise'],
+        criado_em__lt=ticket.criado_em
+    ).count() + 1
+    
+    total_fila = Ticket.objects.filter(
+        demanda=ticket.demanda,
+        status__in=['aguardando', 'em_analise']
+    ).count()
+    
     return render(request, 'public/ticket_success.html', {
-        'ticket': ticket
+        'ticket': ticket,
+        'posicao_fila': posicao_fila,
+        'total_fila': total_fila
     })

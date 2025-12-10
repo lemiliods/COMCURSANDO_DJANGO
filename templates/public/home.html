@@ -415,8 +415,11 @@
             
             <div class="concurso-footer">
                 <div class="fila-info">
-                    <i class="fas fa-file-alt"></i>
-                    <span>Envie sua prova e receba via PIX</span>
+                    <i class="fas fa-users"></i>
+                    <span>{{ demanda.total_na_fila }} pessoa(s) na fila</span>
+                    {% if demanda.total_na_fila > 0 %}
+                        <span class="fila-count">{{ demanda.total_na_fila }}</span>
+                    {% endif %}
                 </div>
                 <a href="/ticket/novo/{{ demanda.id }}/" class="btn btn-success">
                     <i class="fas fa-upload"></i> Enviar Prova

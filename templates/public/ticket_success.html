@@ -210,16 +210,28 @@
             <span class="info-label"><i class="fas fa-info-circle"></i> Status:</span>
             <span class="info-value" style="color: #f39c12;">{{ ticket.get_status_display }}</span>
         </div>
+        <div class="info-row">
+            <span class="info-label"><i class="fas fa-list-ol"></i> Posição na Fila:</span>
+            <span class="info-value" style="color: #667eea; font-size: 20px;">{{ posicao_fila }}º de {{ total_fila }}</span>
+        </div>
     </div>
+    
+    {% if posicao_fila == 1 %}
+    <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <strong style="color: #155724;">🎉 Você é o primeiro da fila!</strong>
+        <p style="color: #155724; margin: 5px 0 0 0;">Sua prova será analisada em breve.</p>
+    </div>
+    {% endif %}
     
     <div class="instructions">
         <h3><i class="fas fa-lightbulb"></i> O que acontece agora?</h3>
         <ul>
             <li><strong>Guarde seu código:</strong> {{ ticket.codigo_ticket }}</li>
-            <li>Nossa equipe irá <strong>analisar sua prova</strong></li>
+            <li>Você está na posição <strong>{{ posicao_fila }}º</strong> de <strong>{{ total_fila }}</strong> pessoa(s) na fila</li>
+            <li>Nossa equipe irá <strong>analisar sua prova por ordem de chegada</strong></li>
             <li>Se aprovada, você receberá <strong>R$ {{ ticket.demanda.valor_recompensa }}</strong> via PIX</li>
             <li>O pagamento será enviado para: <strong>{{ ticket.cliente_pix }}</strong></li>
-            <li>Se recusada, você receberá o motivo da recusa</li>
+            <li>Entraremos em contato pelo WhatsApp: <strong>{{ ticket.cliente_whatsapp }}</strong></li>
         </ul>
     </div>
     

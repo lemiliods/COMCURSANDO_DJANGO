@@ -18,7 +18,14 @@ def home_view(request):
     demandas = Demanda.objects.filter(status__in=['aberto', 'em_analise'])
     
     # Filtrar concursos que NÃO têm prova aprovada ou paga
-    demandas = [d for d in demandas if not d.tem_prova_aprovada]
+    demandas_list = []
+    for d in demandas:
+        if not d.tem_prova_aprovada:
+            # Adicionar informações de fila
+            d.total_na_fila = d.tickets.filter(status__in=['aguardando', 'em_analise']).count()
+            demandas_list.append(d)
+    
+    demandas = demandas_list
     
     # Aplicar filtros de busca
     if search:
