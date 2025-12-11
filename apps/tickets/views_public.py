@@ -93,8 +93,6 @@ def ticket_novo_view(request, demanda_id):
         errors = []
         if not cliente_nome:
             errors.append('Por favor, informe seu nome completo.')
-        if not cliente_email and not cliente_whatsapp:
-            errors.append('Por favor, informe pelo menos E-mail ou WhatsApp para notificações.')
         if not cliente_whatsapp:
             errors.append('Por favor, informe seu WhatsApp.')
         else:

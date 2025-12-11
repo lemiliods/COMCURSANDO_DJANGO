@@ -234,7 +234,7 @@
         
         <div class="form-group">
             <label for="cliente_email">
-                E-mail {% if not pode_enviar_agora %}<span class="required">*</span>{% endif %}
+                E-mail (opcional)
             </label>
             <input 
                 type="email" 
@@ -242,7 +242,6 @@
                 name="cliente_email" 
                 class="form-control" 
                 placeholder="seu@email.com"
-                {% if not pode_enviar_agora %}required{% endif %}
                 value="{{ request.POST.cliente_email }}"
             >
             <div class="help-text">
