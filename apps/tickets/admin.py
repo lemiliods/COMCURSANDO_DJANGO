@@ -3,7 +3,11 @@ from django.utils.html import format_html
 from django.db.models import Count
 from django.utils import timezone
 from .models import Ticket
+from .notifications import notificar_proximo_da_fila
 import urllib.parse
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def enviar_notificacao_encerramento(ticket):
@@ -166,8 +170,10 @@ class TicketAdmin(admin.ModelAdmin):
     aprovar_prova.short_description = '✓ Aprovar Prova'
     
     def recusar_prova(self, request, queryset):
-        """Recusa provas selecionadas."""
+        """Recusa provas selecionadas e notifica próximo da fila."""
         count = 0
+        notificados = []
+        
         for ticket in queryset:
             if ticket.status in ['aguardando', 'em_analise']:
                 ticket.status = 'recusado'
@@ -177,8 +183,28 @@ class TicketAdmin(admin.ModelAdmin):
                 ticket.demanda.save()
                 ticket.save()
                 count += 1
-        self.message_user(request, f'{count} prova(s) recusada(s). Demanda(s) voltaram para "aberto".')
-    recusar_prova.short_description = '✗ Recusar Prova'
+                
+                # Notificar próximo da fila
+                try:
+                    proximo = notificar_proximo_da_fila(ticket.demanda)
+                    if proximo:
+                        notificados.append({
+                            'nome': proximo.cliente_nome,
+                            'codigo': proximo.codigo_ticket,
+                            'whatsapp': proximo.cliente_whatsapp
+                        })
+                        logger.info(f"Próximo da fila notificado: {proximo.codigo_ticket}")
+                except Exception as e:
+                    logger.error(f"Erro ao notificar próximo da fila: {str(e)}")
+        
+        # Mensagem com informações de notificação
+        msg = f'{count} prova(s) recusada(s). Demanda(s) voltaram para "aberto". '
+        if notificados:
+            msg += f'{len(notificados)} pessoa(s) na fila notificada(s) automaticamente: '
+            msg += ', '.join([f"{n['nome']} ({n['codigo']})" for n in notificados])
+        
+        self.message_user(request, msg)
+    recusar_prova.short_description = '✗ Recusar Prova e Notificar Próximo'
     
     def marcar_como_pago(self, request, queryset):
         """

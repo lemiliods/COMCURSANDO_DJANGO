@@ -1,7 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from apps.concursos.models import Demanda
 from apps.tickets.models import Ticket
+from apps.tickets.notifications import enviar_email_fila, gerar_link_whatsapp_fila
 import urllib.parse
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def enviar_mensagem_whatsapp(numero, ticket):
@@ -172,6 +176,14 @@ def ticket_novo_view(request, demanda_id):
                 cliente_pix=cliente_pix,
                 status='na_fila'  # Entra na fila
             )
+            
+            # Enviar notificações de entrada na fila
+            try:
+                enviar_email_fila(ticket)
+                whatsapp_link = gerar_link_whatsapp_fila(ticket)
+                logger.info(f"Cliente entrou na fila - Ticket: {ticket.codigo_ticket}, WhatsApp: {whatsapp_link}")
+            except Exception as e:
+                logger.error(f"Erro ao enviar notificações de fila: {str(e)}")
         
         return redirect('ticket_success', ticket_id=ticket.id)
     
