@@ -187,9 +187,9 @@
         <p><strong>{{ demanda.concurso }}</strong></p>
         <p>Edital: {{ demanda.numero_edital }} | {{ demanda.cargo }}</p>
         <div class="valor-recompensa">R$ {{ demanda.valor_recompensa }}</div>
-        <p style="background: #fff3cd; padding: 10px; border-radius: 5px; margin-top: 10px;">
-            <strong>⚠️ Já existe uma prova em análise!</strong><br>
-            Entre na fila. Você será notificado quando for sua vez de enviar.
+        <p style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); color: white; padding: 15px; border-radius: 8px; margin-top: 10px; border-left: 5px solid #c92a2a; box-shadow: 0 4px 12px rgba(238, 90, 111, 0.3);">
+            <strong style="font-size: 18px;">⚠️ Já existe uma prova em análise!</strong><br>
+            <span style="font-size: 15px;">Entre na fila de espera. Você será notificado pelo WhatsApp quando for sua vez!</span>
         </p>
         {% endif %}
     </div>
