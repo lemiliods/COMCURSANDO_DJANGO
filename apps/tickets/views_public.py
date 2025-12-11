@@ -140,6 +140,7 @@ def ticket_novo_view(request, demanda_id):
                 errors.append('Arquivo muito grande. Tamanho máximo: 10MB.')
         
         if errors:
+            logger.error(f"Erros na validação do ticket: {errors}")
             return render(request, 'public/ticket_form.html', {
                 'demanda': demanda,
                 'errors': errors,
@@ -148,6 +149,7 @@ def ticket_novo_view(request, demanda_id):
             })
         
         # Criar ticket
+        logger.info(f"Criando ticket - pode_enviar_agora: {pode_enviar_agora}, cliente: {cliente_nome}")
         if pode_enviar_agora:
             # 1ª pessoa: Envia prova diretamente e vai para análise
             ticket = Ticket.objects.create(
@@ -185,6 +187,7 @@ def ticket_novo_view(request, demanda_id):
             except Exception as e:
                 logger.error(f"Erro ao enviar notificações de fila: {str(e)}")
         
+        logger.info(f"Redirecionando para ticket_success - ticket_id: {ticket.id}")
         return redirect('ticket_success', ticket_id=ticket.id)
     
     return render(request, 'public/ticket_form.html', {
