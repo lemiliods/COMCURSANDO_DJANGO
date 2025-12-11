@@ -175,6 +175,14 @@
 
 {% block content %}
 <div class="ticket-form-card">
+    <!-- DEBUG INFO -->
+    <div style="background: #f0f0f0; padding: 10px; margin-bottom: 10px; border: 2px solid #333; font-family: monospace;">
+        <strong>🔍 DEBUG:</strong><br>
+        pode_enviar_agora = {{ pode_enviar_agora }}<br>
+        tem_prova_em_analise = {{ tem_prova_em_analise }}<br>
+        total_na_fila = {{ total_na_fila }}
+    </div>
+    
     <div class="concurso-info">
         {% if pode_enviar_agora %}
         <h2>💰 Enviar Prova</h2>

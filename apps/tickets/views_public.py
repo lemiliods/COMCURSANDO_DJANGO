@@ -189,12 +189,15 @@ def ticket_novo_view(request, demanda_id):
         logger.info(f"Redirecionando para ticket_success - ticket_id: {ticket.id}")
         return redirect('ticket_success', ticket_id=ticket.id)
     
-    return render(request, 'public/ticket_form.html', {
+    # GET request - renderizar formulário
+    context = {
         'demanda': demanda,
         'pode_enviar_agora': not tem_prova_em_analise,
         'tem_prova_em_analise': tem_prova_em_analise,
         'total_na_fila': total_na_fila
-    })
+    }
+    logger.info(f"GET /ticket/novo/{demanda_id}/ - Context: pode_enviar_agora={not tem_prova_em_analise}, tem_prova_em_analise={tem_prova_em_analise}, total_na_fila={total_na_fila}")
+    return render(request, 'public/ticket_form.html', context)
 
 
 def ticket_success_view(request, ticket_id):
