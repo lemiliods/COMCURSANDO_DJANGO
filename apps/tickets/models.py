@@ -10,11 +10,14 @@ class Ticket(models.Model):
     """
     
     STATUS_CHOICES = [
+        ('na_fila', 'Na Fila de Espera'),
+        ('notificado', 'Notificado - Aguardando Envio'),
         ('aguardando', 'Aguardando Análise'),
         ('em_analise', 'Em Análise'),
         ('aprovado', 'Aprovado - Aguardando Pagamento'),
         ('pago', 'Pago e Concluído'),
         ('recusado', 'Recusado'),
+        ('expirado', 'Tempo Expirado'),
     ]
     
     demanda = models.ForeignKey(
@@ -24,9 +27,10 @@ class Ticket(models.Model):
         verbose_name='Concurso'
     )
     cliente_nome = models.CharField(max_length=255, verbose_name='Nome do Cliente')
+    cliente_email = models.EmailField(max_length=255, verbose_name='E-mail', help_text='E-mail para notificações', blank=True, null=True)
     cliente_whatsapp = models.CharField(max_length=20, verbose_name='WhatsApp', help_text='Número com código do país +55 e DDD (ex: +5511966149003)')
     cliente_pix = models.CharField(max_length=255, verbose_name='Chave PIX', help_text='CPF, e-mail, telefone ou chave aleatória')
-    arquivo_prova = models.FileField(upload_to='provas/%Y/%m/', verbose_name='Arquivo da Prova', help_text='PDF ou imagem da prova')
+    arquivo_prova = models.FileField(upload_to='provas/%Y/%m/', verbose_name='Arquivo da Prova', help_text='PDF ou imagem da prova', blank=True, null=True)
     codigo_ticket = models.CharField(
         max_length=12, 
         unique=True, 
@@ -35,9 +39,11 @@ class Ticket(models.Model):
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default='aguardando',
+        default='na_fila',
         verbose_name='Status'
     )
+    notificado_em = models.DateTimeField(null=True, blank=True, verbose_name='Notificado em')
+    prazo_envio = models.DateTimeField(null=True, blank=True, verbose_name='Prazo para Envio')
     observacoes_admin = models.TextField(blank=True, null=True, verbose_name='Observações do Admin', help_text='Motivo da recusa ou observações')
     valor_pago = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name='Valor Pago')
     criado_em = models.DateTimeField(auto_now_add=True, verbose_name='Enviado em')

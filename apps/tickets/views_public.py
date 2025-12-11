@@ -34,8 +34,9 @@ Obrigado! 🚀"""
 
 def ticket_novo_view(request, demanda_id):
     """
-    View para enviar prova de concurso.
-    Cliente faz upload da prova (PDF ou imagem) e informa chave PIX.
+    View para enviar prova de concurso ou entrar na fila.
+    - 1ª pessoa: Envia prova diretamente
+    - Demais: Entram na fila de espera
     """
     demanda = get_object_or_404(Demanda, id=demanda_id)
     
@@ -52,11 +53,27 @@ def ticket_novo_view(request, demanda_id):
             'error': 'Este concurso já possui uma prova aprovada.'
         })
     
+    # Verificar se existe alguém já enviando prova (em análise ou aguardando)
+    tem_prova_em_analise = Ticket.objects.filter(
+        demanda=demanda,
+        status__in=['aguardando', 'em_analise']
+    ).exists()
+    
+    # Verificar total na fila
+    total_na_fila = Ticket.objects.filter(
+        demanda=demanda,
+        status__in=['na_fila', 'notificado', 'aguardando', 'em_analise']
+    ).count()
+    
     if request.method == 'POST':
         cliente_nome = request.POST.get('cliente_nome', '').strip()
+        cliente_email = request.POST.get('cliente_email', '').strip()
         cliente_whatsapp = request.POST.get('cliente_whatsapp', '').strip()
         cliente_pix = request.POST.get('cliente_pix', '').strip()
         arquivo_prova = request.FILES.get('arquivo_prova')
+        
+        # Se não tem prova em análise, permite envio direto
+        pode_enviar_agora = not tem_prova_em_analise
         
         # Normalizar WhatsApp: adicionar +55 se não tiver código do país
         if cliente_whatsapp and not cliente_whatsapp.startswith('+'):
@@ -72,6 +89,8 @@ def ticket_novo_view(request, demanda_id):
         errors = []
         if not cliente_nome:
             errors.append('Por favor, informe seu nome completo.')
+        if not cliente_email and not cliente_whatsapp:
+            errors.append('Por favor, informe pelo menos E-mail ou WhatsApp para notificações.')
         if not cliente_whatsapp:
             errors.append('Por favor, informe seu WhatsApp.')
         else:
@@ -101,7 +120,9 @@ def ticket_novo_view(request, demanda_id):
         
         if not cliente_pix:
             errors.append('Por favor, informe sua chave PIX.')
-        if not arquivo_prova:
+        
+        # Validar arquivo apenas se for enviar agora
+        if pode_enviar_agora and not arquivo_prova:
             errors.append('Por favor, envie o arquivo da prova.')
         
         # Validar tipo de arquivo
@@ -117,29 +138,48 @@ def ticket_novo_view(request, demanda_id):
         if errors:
             return render(request, 'public/ticket_form.html', {
                 'demanda': demanda,
-                'errors': errors
+                'errors': errors,
+                'pode_enviar_agora': pode_enviar_agora,
+                'tem_prova_em_analise': tem_prova_em_analise
             })
         
-        # Criar ticket (envio de prova)
-        ticket = Ticket.objects.create(
-            demanda=demanda,
-            cliente_nome=cliente_nome,
-            cliente_whatsapp=cliente_whatsapp,
-            cliente_pix=cliente_pix,
-            arquivo_prova=arquivo_prova,
-            status='aguardando'
-        )
-        
-        # Enviar mensagem WhatsApp
-        enviar_mensagem_whatsapp(cliente_whatsapp, ticket)
-        
-        # NÃO atualizar status da demanda - deixar como "aberto" para receber mais provas
-        # O status só muda quando uma prova for aprovada/paga
+        # Criar ticket
+        if pode_enviar_agora:
+            # 1ª pessoa: Envia prova diretamente e vai para análise
+            ticket = Ticket.objects.create(
+                demanda=demanda,
+                cliente_nome=cliente_nome,
+                cliente_email=cliente_email,
+                cliente_whatsapp=cliente_whatsapp,
+                cliente_pix=cliente_pix,
+                arquivo_prova=arquivo_prova,
+                status='em_analise'  # Já vai direto para análise
+            )
+            
+            # Atualizar demanda para em_analise
+            demanda.status = 'em_analise'
+            demanda.save()
+            
+            # Enviar mensagem WhatsApp confirmação
+            enviar_mensagem_whatsapp(cliente_whatsapp, ticket)
+        else:
+            # Demais pessoas: Entram na fila de espera
+            ticket = Ticket.objects.create(
+                demanda=demanda,
+                cliente_nome=cliente_nome,
+                cliente_email=cliente_email,
+                cliente_whatsapp=cliente_whatsapp,
+                cliente_pix=cliente_pix,
+                status='na_fila'  # Entra na fila
+            )
         
         return redirect('ticket_success', ticket_id=ticket.id)
     
     return render(request, 'public/ticket_form.html', {
-        'demanda': demanda
+        'demanda': demanda,
+        'pode_enviar_agora': not tem_prova_em_analise,
+        'tem_prova_em_analise': tem_prova_em_analise,
+        'total_na_fila': total_na_fila
     })
 
 

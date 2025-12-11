@@ -176,11 +176,22 @@
 {% block content %}
 <div class="ticket-form-card">
     <div class="concurso-info">
+        {% if pode_enviar_agora %}
         <h2>💰 Enviar Prova</h2>
         <p><strong>{{ demanda.concurso }}</strong></p>
         <p>Edital: {{ demanda.numero_edital }} | {{ demanda.cargo }}</p>
         <div class="valor-recompensa">R$ {{ demanda.valor_recompensa }}</div>
         <p>Você receberá esse valor via PIX se sua prova for aprovada!</p>
+        {% else %}
+        <h2>⏳ Entrar na Fila de Espera</h2>
+        <p><strong>{{ demanda.concurso }}</strong></p>
+        <p>Edital: {{ demanda.numero_edital }} | {{ demanda.cargo }}</p>
+        <div class="valor-recompensa">R$ {{ demanda.valor_recompensa }}</div>
+        <p style="background: #fff3cd; padding: 10px; border-radius: 5px; margin-top: 10px;">
+            <strong>⚠️ Já existe uma prova em análise!</strong><br>
+            Entre na fila. Você será notificado quando for sua vez de enviar.
+        </p>
+        {% endif %}
     </div>
     
     {% if error %}
@@ -222,6 +233,24 @@
         </div>
         
         <div class="form-group">
+            <label for="cliente_email">
+                E-mail {% if not pode_enviar_agora %}<span class="required">*</span>{% endif %}
+            </label>
+            <input 
+                type="email" 
+                id="cliente_email" 
+                name="cliente_email" 
+                class="form-control" 
+                placeholder="seu@email.com"
+                {% if not pode_enviar_agora %}required{% endif %}
+                value="{{ request.POST.cliente_email }}"
+            >
+            <div class="help-text">
+                <i class="fas fa-info-circle"></i> E-mail para receber notificações quando for sua vez
+            </div>
+        </div>
+        
+        <div class="form-group">
             <label for="cliente_whatsapp">
                 WhatsApp <span class="required">*</span>
             </label>
@@ -258,6 +287,7 @@
             </div>
         </div>
         
+        {% if pode_enviar_agora %}
         <div class="form-group">
             <label for="arquivo_prova">
                 Arquivo da Prova <span class="required">*</span>
@@ -286,9 +316,11 @@
                 <i class="fas fa-info-circle"></i> Envie uma foto ou PDF da prova que você fez
             </div>
         </div>
+        {% endif %}
         
         <button type="submit" class="btn btn-success">
-            <i class="fas fa-upload"></i> Enviar Prova
+            <i class="fas fa-{% if pode_enviar_agora %}upload{% else %}clock{% endif %}"></i> 
+            {% if pode_enviar_agora %}Enviar Prova{% else %}Entrar na Fila de Espera{% endif %}
         </button>
         
         <a href="/" class="btn btn-secondary">
