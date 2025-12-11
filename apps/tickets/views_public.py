@@ -105,14 +105,14 @@ def ticket_novo_view(request, demanda_id):
             envio_existente = Ticket.objects.filter(
                 demanda=demanda,
                 cliente_whatsapp=cliente_whatsapp,
-                status__in=['aguardando', 'em_analise', 'aprovado']
+                status__in=['na_fila', 'notificado', 'aguardando', 'em_analise', 'aprovado']
             ).first()
             
             if envio_existente:
                 # Calcular posição na fila
                 posicao = Ticket.objects.filter(
                     demanda=demanda,
-                    status__in=['aguardando', 'em_analise'],
+                    status__in=['na_fila', 'notificado', 'aguardando', 'em_analise'],
                     criado_em__lt=envio_existente.criado_em
                 ).count() + 1
                 
@@ -190,16 +190,16 @@ def ticket_success_view(request, ticket_id):
     """
     ticket = get_object_or_404(Ticket, id=ticket_id)
     
-    # Calcular posição na fila
+    # Calcular posição na fila (incluindo todos os status ativos)
     posicao_fila = Ticket.objects.filter(
         demanda=ticket.demanda,
-        status__in=['aguardando', 'em_analise'],
+        status__in=['na_fila', 'notificado', 'aguardando', 'em_analise'],
         criado_em__lt=ticket.criado_em
     ).count() + 1
     
     total_fila = Ticket.objects.filter(
         demanda=ticket.demanda,
-        status__in=['aguardando', 'em_analise']
+        status__in=['na_fila', 'notificado', 'aguardando', 'em_analise']
     ).count()
     
     return render(request, 'public/ticket_success.html', {
