@@ -70,6 +70,7 @@ def ticket_novo_view(request, demanda_id):
     ).count()
     
     if request.method == 'POST':
+        logger.info(f"=== POST RECEBIDO === Demanda ID: {demanda_id}, POST data: {request.POST}")
         cliente_nome = request.POST.get('cliente_nome', '').strip()
         cliente_email = request.POST.get('cliente_email', '').strip()
         cliente_whatsapp = request.POST.get('cliente_whatsapp', '').strip()
