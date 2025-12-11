@@ -211,8 +211,9 @@
     </div>
     {% endif %}
     
-    <form method="POST" action="/ticket/novo/{{ demanda.id }}/" enctype="multipart/form-data">
+    <form method="POST" action="/ticket/novo/{{ demanda.id }}/" enctype="multipart/form-data" onsubmit="console.log('Form submetido!'); return true;">
         {% csrf_token %}
+        <!-- DEBUG: pode_enviar_agora={{ pode_enviar_agora }}, tem_prova_em_analise={{ tem_prova_em_analise }} -->
         
         <div class="form-group">
             <label for="cliente_nome">
@@ -317,7 +318,7 @@
         </div>
         {% endif %}
         
-        <button type="submit" class="btn btn-success">
+        <button type="submit" class="btn btn-success" onclick="console.log('Botão clicado!'); return true;">
             <i class="fas fa-{% if pode_enviar_agora %}upload{% else %}clock{% endif %}"></i> 
             {% if pode_enviar_agora %}Enviar Prova{% else %}Entrar na Fila de Espera{% endif %}
         </button>
