@@ -7,6 +7,7 @@ from django.utils import timezone
 from datetime import timedelta
 import urllib.parse
 import logging
+import pytz
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +79,7 @@ Olá {ticket.cliente_nome}!
 🔗 Clique no link abaixo para fazer o upload:
 {link_upload}
 
-⏱️ Prazo: {ticket.prazo_envio.strftime('%d/%m/%Y às %H:%M')}
+⏱️ Prazo: {ticket.prazo_envio.astimezone(pytz.timezone('America/Sao_Paulo')).strftime('%d/%m/%Y às %H:%M')} (horário de Brasília)
 
 💰 Recompensa: R$ {ticket.demanda.valor_recompensa}
 
@@ -134,7 +135,9 @@ def gerar_link_whatsapp_sua_vez(ticket, link_upload):
     """
     Gera link do WhatsApp para notificar que chegou a vez de enviar.
     """
-    prazo_formatado = ticket.prazo_envio.strftime('%d/%m/%Y às %H:%M')
+    # Converter para horário de Brasília
+    prazo_brasilia = ticket.prazo_envio.astimezone(pytz.timezone('America/Sao_Paulo'))
+    prazo_formatado = prazo_brasilia.strftime('%d/%m/%Y às %H:%M')
     
     mensagem = f"""🎉 *SUA VEZ! ENVIE SUA PROVA AGORA*
 
@@ -148,7 +151,7 @@ Olá *{ticket.cliente_nome}*!
 🔗 *Link para upload:*
 {link_upload}
 
-⏱️ *Prazo:* {prazo_formatado}
+⏱️ *Prazo:* {prazo_formatado} (horário de Brasília)
 💰 *Recompensa:* R$ {ticket.demanda.valor_recompensa}
 
 Não perca essa oportunidade! 🚀
