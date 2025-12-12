@@ -44,8 +44,8 @@ def ticket_novo_view(request, demanda_id):
     """
     demanda = get_object_or_404(Demanda, id=demanda_id)
     
-    # Verificar se concurso está aberto e não tem prova aprovada
-    if demanda.status != 'aberto':
+    # Verificar se concurso aceita envios (aberto ou em_analise)
+    if demanda.status not in ['aberto', 'em_analise']:
         return render(request, 'public/ticket_form.html', {
             'demanda': demanda,
             'error': 'Este concurso não está mais aceitando envios.'
