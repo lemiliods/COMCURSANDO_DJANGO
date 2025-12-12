@@ -416,7 +416,7 @@
             <div class="concurso-footer">
                 <div class="fila-info">
                     <i class="fas fa-users"></i>
-                    <span>{{ demanda.total_na_fila }} pessoa(s) na fila</span>
+                    <span>{{ demanda.total_na_fila }} {% if demanda.total_na_fila == 1 %}pessoa{% else %}pessoas{% endif %} participando</span>
                     {% if demanda.total_na_fila > 0 %}
                         <span class="fila-count">{{ demanda.total_na_fila }}</span>
                     {% endif %}

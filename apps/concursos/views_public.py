@@ -21,8 +21,8 @@ def home_view(request):
     demandas_list = []
     for d in demandas:
         if not d.tem_prova_aprovada:
-            # Adicionar informações de fila
-            d.total_na_fila = d.tickets.filter(status__in=['aguardando', 'em_analise']).count()
+            # Adicionar informações de fila - contar todos os tickets ativos (fila + em análise)
+            d.total_na_fila = d.tickets.filter(status__in=['na_fila', 'notificado', 'aguardando', 'em_analise']).count()
             demandas_list.append(d)
     
     demandas = demandas_list
