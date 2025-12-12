@@ -1,9 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.utils import timezone
 from apps.concursos.models import Demanda
 from apps.tickets.models import Ticket
 from apps.tickets.notifications import enviar_email_fila, gerar_link_whatsapp_fila
 import urllib.parse
 import logging
+import pytz
 
 logger = logging.getLogger(__name__)
 
@@ -289,6 +291,11 @@ def ticket_upload_view(request, ticket_id):
         return redirect('ticket_success', ticket_id=ticket.id)
     
     # GET - mostrar formulário de upload
+    # Converter prazo para horário de Brasília
+    prazo_brasilia = ticket.prazo_envio.astimezone(pytz.timezone('America/Sao_Paulo'))
+    prazo_formatado = prazo_brasilia.strftime('%d/%m/%Y %H:%M')
+    
     return render(request, 'public/ticket_upload.html', {
-        'ticket': ticket
+        'ticket': ticket,
+        'prazo_formatado': prazo_formatado
     })

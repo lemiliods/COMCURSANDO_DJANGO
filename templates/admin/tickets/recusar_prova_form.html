@@ -1,0 +1,183 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Recusar Provas - {{ block.super }}{% endblock %}
+
+{% block extrastyle %}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 20px auto;
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .tickets-list {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 25px;
+    }
+    
+    .ticket-item {
+        background: white;
+        border-left: 4px solid #dc3545;
+        padding: 12px;
+        margin-bottom: 10px;
+        border-radius: 3px;
+    }
+    
+    .ticket-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .ticket-code {
+        font-weight: bold;
+        color: #dc3545;
+        font-size: 14px;
+    }
+    
+    .ticket-info {
+        color: #6c757d;
+        font-size: 13px;
+        margin-top: 5px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #333;
+    }
+    
+    .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+        font-size: 14px;
+        font-family: inherit;
+        resize: vertical;
+    }
+    
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    }
+    
+    .help-text {
+        font-size: 12px;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    
+    .button-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 25px;
+    }
+    
+    .btn {
+        padding: 10px 25px;
+        border: none;
+        border-radius: 5px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s;
+    }
+    
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .btn-danger:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(220,53,69,0.3);
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background: #5a6268;
+    }
+    
+    .warning-box {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-left: 4px solid #ffc107;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    
+    .warning-box strong {
+        color: #856404;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1>✗ Recusar Provas</h1>
+    
+    <div class="warning-box">
+        <strong>⚠️ Atenção:</strong> Você está prestes a recusar {{ tickets.count }} prova(s). 
+        O motivo será enviado por email aos participantes e os próximos da fila serão notificados automaticamente.
+    </div>
+    
+    <div class="tickets-list">
+        <h3 style="margin-top: 0; color: #495057;">Tickets Selecionados:</h3>
+        {% for ticket in tickets %}
+        <div class="ticket-item">
+            <div class="ticket-code">{{ ticket.codigo_ticket }}</div>
+            <div class="ticket-info">
+                <strong>Cliente:</strong> {{ ticket.cliente_nome }}
+                {% if ticket.cliente_email %}({{ ticket.cliente_email }}){% endif %}<br>
+                <strong>Concurso:</strong> {{ ticket.demanda.concurso.nome }}<br>
+                <strong>Status Atual:</strong> {{ ticket.get_status_display }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="id_motivo">Motivo da Recusa: *</label>
+            {{ form.motivo }}
+            <div class="help-text">{{ form.motivo.help_text }}</div>
+            {% if form.motivo.errors %}
+                <div style="color: #dc3545; font-size: 13px; margin-top: 5px;">
+                    {{ form.motivo.errors }}
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="button-group">
+            <button type="submit" class="btn btn-danger">
+                ✓ Confirmar Recusa e Enviar Email
+            </button>
+            <a href="{% url 'admin:tickets_ticket_changelist' %}" class="btn btn-secondary">
+                ← Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

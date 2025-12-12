@@ -107,7 +107,7 @@
     {% if not error %}
     <div class="timer">
         <i class="fas fa-clock"></i>
-        <strong>Você tem até {{ ticket.prazo_envio|date:"d/m/Y H:i" }} (horário de Brasília)</strong><br>
+        <strong>Você tem até {{ prazo_formatado }} (horário de Brasília)</strong><br>
         para enviar sua prova!
     </div>
     

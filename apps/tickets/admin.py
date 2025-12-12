@@ -2,8 +2,11 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.db.models import Count
 from django.utils import timezone
+from django.shortcuts import render, redirect
+from django.urls import path
 from .models import Ticket
-from .notifications import notificar_proximo_da_fila
+from .notifications import notificar_proximo_da_fila, enviar_email_recusa, gerar_link_whatsapp_recusa
+from .forms import RecusarProvaForm
 import urllib.parse
 import logging
 
@@ -170,41 +173,108 @@ class TicketAdmin(admin.ModelAdmin):
     aprovar_prova.short_description = '✓ Aprovar Prova'
     
     def recusar_prova(self, request, queryset):
-        """Recusa provas selecionadas e notifica próximo da fila."""
-        count = 0
-        notificados = []
+        """Recusa provas selecionadas com motivo e notifica próximo da fila."""
+        # Guardar IDs dos tickets selecionados na sessão
+        ticket_ids = list(queryset.values_list('id', flat=True))
+        request.session['tickets_to_refuse'] = ticket_ids
         
-        for ticket in queryset:
-            if ticket.status in ['aguardando', 'em_analise']:
-                ticket.status = 'recusado'
-                ticket.analisado_em = timezone.now()
-                # Retornar demanda para aberto
-                ticket.demanda.status = 'aberto'
-                ticket.demanda.save()
-                ticket.save()
-                count += 1
+        # Redirecionar para página de recusa com motivo
+        return redirect('admin:recusar_prova_form')
+    
+    recusar_prova.short_description = '✗ Recusar Prova com Motivo'
+    
+    def get_urls(self):
+        """Adiciona URLs customizadas ao admin."""
+        urls = super().get_urls()
+        custom_urls = [
+            path('recusar-prova/', self.admin_site.admin_view(self.recusar_prova_view), name='recusar_prova_form'),
+        ]
+        return custom_urls + urls
+    
+    def recusar_prova_view(self, request):
+        """View para formulário de recusa com motivo."""
+        ticket_ids = request.session.get('tickets_to_refuse', [])
+        
+        if not ticket_ids:
+            self.message_user(request, 'Nenhum ticket selecionado.', level='error')
+            return redirect('admin:tickets_ticket_changelist')
+        
+        tickets = Ticket.objects.filter(id__in=ticket_ids, status__in=['aguardando', 'em_analise'])
+        
+        if request.method == 'POST':
+            form = RecusarProvaForm(request.POST)
+            if form.is_valid():
+                motivo = form.cleaned_data['motivo']
+                count = 0
+                notificados = []
+                links_whatsapp = []
                 
-                # Notificar próximo da fila
-                try:
-                    proximo = notificar_proximo_da_fila(ticket.demanda)
-                    if proximo:
-                        notificados.append({
-                            'nome': proximo.cliente_nome,
-                            'codigo': proximo.codigo_ticket,
-                            'whatsapp': proximo.cliente_whatsapp
-                        })
-                        logger.info(f"Próximo da fila notificado: {proximo.codigo_ticket}")
-                except Exception as e:
-                    logger.error(f"Erro ao notificar próximo da fila: {str(e)}")
+                for ticket in tickets:
+                    # Atualizar ticket
+                    ticket.status = 'recusado'
+                    ticket.analisado_em = timezone.now()
+                    ticket.observacoes_admin = f"Recusado: {motivo}"
+                    ticket.save()
+                    
+                    # Retornar demanda para aberto
+                    ticket.demanda.status = 'aberto'
+                    ticket.demanda.save()
+                    count += 1
+                    
+                    # Enviar notificação de recusa
+                    try:
+                        enviar_email_recusa(ticket, motivo)
+                        if ticket.cliente_whatsapp:
+                            whatsapp_link = gerar_link_whatsapp_recusa(ticket, motivo)
+                            links_whatsapp.append({
+                                'nome': ticket.cliente_nome,
+                                'codigo': ticket.codigo_ticket,
+                                'link': whatsapp_link
+                            })
+                    except Exception as e:
+                        logger.error(f"Erro ao enviar notificação de recusa: {str(e)}")
+                    
+                    # Notificar próximo da fila
+                    try:
+                        proximo = notificar_proximo_da_fila(ticket.demanda)
+                        if proximo:
+                            notificados.append({
+                                'nome': proximo.cliente_nome,
+                                'codigo': proximo.codigo_ticket
+                            })
+                    except Exception as e:
+                        logger.error(f"Erro ao notificar próximo da fila: {str(e)}")
+                
+                # Limpar sessão
+                del request.session['tickets_to_refuse']
+                
+                # Mensagem de sucesso com links WhatsApp
+                from django.contrib import messages
+                from django.utils.safestring import mark_safe
+                
+                msg = f'{count} prova(s) recusada(s) com email enviado. '
+                if notificados:
+                    msg += f'{len(notificados)} próximo(s) notificado(s): '
+                    msg += ', '.join([f"{n['nome']}" for n in notificados])
+                
+                if links_whatsapp:
+                    msg += '<br><br><strong>Links WhatsApp para enviar recusa:</strong><br>'
+                    for link in links_whatsapp:
+                        msg += f'<a href="{link["link"]}" target="_blank" style="display:inline-block; background:#c00; color:white; padding:8px 15px; margin:5px; border-radius:5px; text-decoration:none;">📱 {link["nome"]} ({link["codigo"]})</a><br>'
+                
+                messages.success(request, mark_safe(msg))
+                return redirect('admin:tickets_ticket_changelist')
+        else:
+            form = RecusarProvaForm()
         
-        # Mensagem com informações de notificação
-        msg = f'{count} prova(s) recusada(s). Demanda(s) voltaram para "aberto". '
-        if notificados:
-            msg += f'{len(notificados)} pessoa(s) na fila notificada(s) automaticamente: '
-            msg += ', '.join([f"{n['nome']} ({n['codigo']})" for n in notificados])
-        
-        self.message_user(request, msg)
-    recusar_prova.short_description = '✗ Recusar Prova e Notificar Próximo'
+        context = {
+            'form': form,
+            'tickets': tickets,
+            'opts': self.model._meta,
+            'title': 'Recusar Provas',
+        }
+        return render(request, 'admin/tickets/recusar_prova_form.html', context)
+
     
     def marcar_como_pago(self, request, queryset):
         """

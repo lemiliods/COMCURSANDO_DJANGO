@@ -199,3 +199,78 @@ def notificar_proximo_da_fila(demanda):
     logger.info(f"Link WhatsApp: {whatsapp_link}")
     
     return proximo
+
+
+def enviar_email_recusa(ticket, motivo):
+    """
+    Envia email notificando que a prova foi recusada com o motivo.
+    """
+    if not ticket.cliente_email and not ticket.cliente_whatsapp:
+        return False
+    
+    assunto = f'❌ Prova Recusada - {ticket.demanda.concurso}'
+    
+    mensagem = f"""
+Olá {ticket.cliente_nome}!
+
+Informamos que sua prova do concurso {ticket.demanda.concurso} foi analisada e infelizmente foi RECUSADA.
+
+📋 *Código do envio:* {ticket.codigo_ticket}
+📚 *Concurso:* {ticket.demanda.concurso}
+📋 *Edital:* {ticket.demanda.numero_edital}
+
+*Motivo da Recusa:*
+{motivo}
+
+A demanda foi reaberta e outras provas poderão ser enviadas.
+
+Agradecemos sua participação!
+
+--
+COMCURSANDO
+https://comcursando.com.br
+    """
+    
+    try:
+        if ticket.cliente_email:
+            send_mail(
+                assunto,
+                mensagem,
+                settings.DEFAULT_FROM_EMAIL,
+                [ticket.cliente_email],
+                fail_silently=False,
+            )
+            logger.info(f"Email de recusa enviado para {ticket.cliente_email} - Ticket {ticket.codigo_ticket}")
+            return True
+    except Exception as e:
+        logger.error(f"Erro ao enviar email de recusa: {str(e)}")
+        return False
+
+
+def gerar_link_whatsapp_recusa(ticket, motivo):
+    """
+    Gera link do WhatsApp para notificar recusa da prova.
+    """
+    mensagem = f"""❌ *PROVA RECUSADA*
+
+Olá *{ticket.cliente_nome}*!
+
+Sua prova do concurso foi analisada e infelizmente foi recusada.
+
+📋 *Código:* {ticket.codigo_ticket}
+📚 *Concurso:* {ticket.demanda.concurso}
+
+*Motivo da Recusa:*
+{motivo}
+
+A demanda foi reaberta e outras provas poderão ser enviadas.
+
+Agradecemos sua participação!
+
+--
+COMCURSANDO
+comcursando.com.br"""
+    
+    numero = ticket.cliente_whatsapp.replace('+', '').replace(' ', '').replace('-', '')
+    mensagem_encoded = urllib.parse.quote(mensagem)
+    return f"https://wa.me/{numero}?text={mensagem_encoded}"
