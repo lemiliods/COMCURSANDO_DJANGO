@@ -175,14 +175,6 @@
 
 {% block content %}
 <div class="ticket-form-card">
-    <!-- DEBUG INFO -->
-    <div style="background: #f0f0f0; padding: 10px; margin-bottom: 10px; border: 2px solid #333; font-family: monospace;">
-        <strong>🔍 DEBUG:</strong><br>
-        pode_enviar_agora = {{ pode_enviar_agora }}<br>
-        tem_prova_em_analise = {{ tem_prova_em_analise }}<br>
-        total_na_fila = {{ total_na_fila }}
-    </div>
-    
     <div class="concurso-info">
         {% if pode_enviar_agora %}
         <h2>💰 Enviar Prova</h2>
@@ -219,9 +211,8 @@
     </div>
     {% endif %}
     
-    <form method="POST" action="/ticket/novo/{{ demanda.id }}/" enctype="multipart/form-data" onsubmit="console.log('Form submetido!'); return true;">
+    <form method="POST" action="/ticket/novo/{{ demanda.id }}/" enctype="multipart/form-data">
         {% csrf_token %}
-        <!-- DEBUG: pode_enviar_agora={{ pode_enviar_agora }}, tem_prova_em_analise={{ tem_prova_em_analise }} -->
         
         <div class="form-group">
             <label for="cliente_nome">
@@ -326,7 +317,7 @@
         </div>
         {% endif %}
         
-        <button type="submit" class="btn btn-success" onclick="console.log('Botão clicado!'); return true;">
+        <button type="submit" class="btn btn-success">
             <i class="fas fa-{% if pode_enviar_agora %}upload{% else %}clock{% endif %}"></i> 
             {% if pode_enviar_agora %}Enviar Prova{% else %}Entrar na Fila de Espera{% endif %}
         </button>
