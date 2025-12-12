@@ -53,7 +53,7 @@ class TicketAdmin(admin.ModelAdmin):
     date_hierarchy = 'criado_em'
     readonly_fields = ['codigo_ticket', 'criado_em', 'atualizado_em', 'analisado_em', 'pago_em']
     list_per_page = 25
-    actions = ['aprovar_prova', 'recusar_prova', 'marcar_como_pago']
+    actions = ['aprovar_prova', 'recusar_prova', 'marcar_como_pago', 'excluir_tickets']
     
     fieldsets = (
         ('📄 Informações do Envio', {
@@ -267,3 +267,31 @@ class TicketAdmin(admin.ModelAdmin):
             self.message_user(request, f'{count} prova(s) marcada(s) como PAGA.')
     
     marcar_como_pago.short_description = '💰 Marcar como Pago e Notificar'
+    
+    def excluir_tickets(self, request, queryset):
+        """
+        Exclui tickets selecionados (útil para remover testes ou entradas inválidas).
+        """
+        count = queryset.count()
+        tickets_info = []
+        
+        for ticket in queryset:
+            tickets_info.append({
+                'codigo': ticket.codigo_ticket,
+                'nome': ticket.cliente_nome,
+                'status': ticket.get_status_display()
+            })
+        
+        # Excluir os tickets
+        queryset.delete()
+        
+        # Mensagem detalhada
+        msg = f'{count} ticket(s) excluído(s) com sucesso:<br>'
+        for info in tickets_info:
+            msg += f'• {info["codigo"]} - {info["nome"]} ({info["status"]})<br>'
+        
+        from django.contrib import messages
+        from django.utils.safestring import mark_safe
+        messages.success(request, mark_safe(msg))
+    
+    excluir_tickets.short_description = '🗑️ Excluir Tickets Selecionados'
