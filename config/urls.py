@@ -23,7 +23,7 @@ from apps.users.views import login_view, AdminUserViewSet
 from apps.concursos.views import DemandaViewSet
 from apps.concursos.views_public import home_view
 from apps.tickets.views import TicketViewSet
-from apps.tickets.views_public import ticket_novo_view, ticket_success_view
+from apps.tickets.views_public import ticket_novo_view, ticket_success_view, ticket_upload_view
 from config.admin import admin_site
 
 # Registrar modelos no admin customizado
@@ -48,6 +48,7 @@ urlpatterns = [
     path('', home_view, name='home'),  # Página pública
     path('ticket/novo/<int:demanda_id>/', ticket_novo_view, name='ticket_novo'),
     path('ticket/sucesso/<int:ticket_id>/', ticket_success_view, name='ticket_success'),
+    path('ticket/upload/<int:ticket_id>/', ticket_upload_view, name='ticket_upload'),
     path('admin/', admin_site.urls),  # Usando admin customizado
     path('api/auth/login', login_view, name='login'),
     path('api/', include(router.urls)),

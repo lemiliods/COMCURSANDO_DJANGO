@@ -1,0 +1,161 @@
+{% extends "public/base.html" %}
+
+{% block extra_css %}
+<style>
+    .upload-card {
+        background: white;
+        border-radius: 12px;
+        padding: 40px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        max-width: 700px;
+        margin: 40px auto;
+    }
+    
+    .alert {
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .alert-error {
+        background: #fee;
+        border-left: 4px solid #c00;
+        color: #c00;
+    }
+    
+    .alert-warning {
+        background: #fff3cd;
+        border-left: 4px solid #f39c12;
+        color: #856404;
+    }
+    
+    .timer {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        margin: 20px 0;
+        font-size: 18px;
+    }
+    
+    .file-upload {
+        border: 3px dashed #ddd;
+        border-radius: 12px;
+        padding: 40px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: #fafafa;
+    }
+    
+    .file-upload:hover {
+        border-color: #28a745;
+        background: #f0fff4;
+    }
+    
+    .file-upload input[type="file"] {
+        display: none;
+    }
+    
+    .btn {
+        padding: 14px 30px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-success {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+    }
+    
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="upload-card">
+    <h1 style="text-align: center; color: #333;">⏰ Sua Vez de Enviar a Prova!</h1>
+    
+    {% if error %}
+    <div class="alert alert-error">
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
+    </div>
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="/" class="btn btn-success">Voltar para Home</a>
+    </div>
+    {% elif errors %}
+    <div class="alert alert-error">
+        <i class="fas fa-exclamation-circle"></i>
+        <ul style="margin: 10px 0 0 20px;">
+            {% for erro in errors %}
+            <li>{{ erro }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    
+    {% if not error %}
+    <div class="timer">
+        <i class="fas fa-clock"></i>
+        <strong>Você tem até {{ ticket.prazo_envio|date:"d/m/Y H:i" }} (horário de Brasília)</strong><br>
+        para enviar sua prova!
+    </div>
+    
+    <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <p><strong>📚 Concurso:</strong> {{ ticket.demanda.concurso }}</p>
+        <p><strong>📋 Edital:</strong> {{ ticket.demanda.numero_edital }}</p>
+        <p><strong>💰 Recompensa:</strong> R$ {{ ticket.demanda.valor_recompensa }}</p>
+        <p><strong>🎫 Seu Código:</strong> {{ ticket.codigo_ticket }}</p>
+    </div>
+    
+    <div class="alert alert-warning">
+        <i class="fas fa-info-circle"></i> 
+        <strong>Atenção:</strong> Após o prazo, seu link expirará e o próximo da fila será notificado automaticamente.
+    </div>
+    
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="file-upload" onclick="document.getElementById('arquivo_prova').click();">
+            <input 
+                type="file" 
+                id="arquivo_prova" 
+                name="arquivo_prova" 
+                accept=".pdf,.jpg,.jpeg,.png"
+                required
+                onchange="updateFileName(this)"
+            >
+            <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: #28a745;"></i>
+            <h3 style="margin: 15px 0;">Clique para selecionar o arquivo</h3>
+            <p style="color: #666;">PDF, JPG ou PNG (máx. 10MB)</p>
+            <div id="fileName" style="margin-top: 15px; color: #28a745; font-weight: bold;"></div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <button type="submit" class="btn btn-success" style="font-size: 18px; padding: 15px 40px;">
+                <i class="fas fa-upload"></i> Enviar Prova Agora
+            </button>
+        </div>
+    </form>
+    {% endif %}
+</div>
+
+<script>
+function updateFileName(input) {
+    const fileName = document.getElementById('fileName');
+    if (input.files && input.files[0]) {
+        fileName.textContent = '📄 ' + input.files[0].name;
+    }
+}
+</script>
+{% endblock %}

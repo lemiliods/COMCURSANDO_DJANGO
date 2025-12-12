@@ -218,3 +218,77 @@ def ticket_success_view(request, ticket_id):
         'posicao_fila': posicao_fila,
         'total_fila': total_fila
     })
+
+
+def ticket_upload_view(request, ticket_id):
+    """
+    View para upload de prova quando o participante é notificado.
+    Apenas para tickets com status 'notificado'.
+    """
+    ticket = get_object_or_404(Ticket, id=ticket_id)
+    
+    # Verificar se o ticket está notificado
+    if ticket.status != 'notificado':
+        return render(request, 'public/ticket_upload.html', {
+            'ticket': ticket,
+            'error': 'Este link não é mais válido. O status do seu ticket mudou.'
+        })
+    
+    # Verificar se o prazo expirou
+    if ticket.prazo_envio and timezone.now() > ticket.prazo_envio:
+        ticket.status = 'expirado'
+        ticket.save()
+        
+        # Notificar próximo da fila
+        from apps.tickets.notifications import notificar_proximo_da_fila
+        try:
+            notificar_proximo_da_fila(ticket.demanda)
+        except Exception as e:
+            logger.error(f"Erro ao notificar próximo após expiração: {str(e)}")
+        
+        return render(request, 'public/ticket_upload.html', {
+            'ticket': ticket,
+            'error': 'Seu prazo de 1 hora expirou. O próximo da fila foi notificado.'
+        })
+    
+    if request.method == 'POST':
+        arquivo_prova = request.FILES.get('arquivo_prova')
+        
+        errors = []
+        
+        # Validar arquivo
+        if not arquivo_prova:
+            errors.append('Por favor, envie o arquivo da prova.')
+        else:
+            # Validar tipo
+            allowed_types = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']
+            if arquivo_prova.content_type not in allowed_types:
+                errors.append('Tipo de arquivo inválido. Envie PDF, JPG ou PNG.')
+            
+            # Validar tamanho (10MB)
+            if arquivo_prova.size > 10 * 1024 * 1024:
+                errors.append('Arquivo muito grande. Tamanho máximo: 10MB.')
+        
+        if errors:
+            return render(request, 'public/ticket_upload.html', {
+                'ticket': ticket,
+                'errors': errors
+            })
+        
+        # Atualizar ticket
+        ticket.arquivo_prova = arquivo_prova
+        ticket.status = 'em_analise'
+        ticket.save()
+        
+        # Atualizar demanda
+        ticket.demanda.status = 'em_analise'
+        ticket.demanda.save()
+        
+        logger.info(f"Ticket {ticket.codigo_ticket} - Upload realizado após notificação")
+        
+        return redirect('ticket_success', ticket_id=ticket.id)
+    
+    # GET - mostrar formulário de upload
+    return render(request, 'public/ticket_upload.html', {
+        'ticket': ticket
+    })
