@@ -1,13 +1,23 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
+from django.http import HttpResponse
 from apps.concursos.models import Demanda
 from apps.tickets.models import Ticket
 from apps.tickets.notifications import enviar_email_fila, gerar_link_whatsapp_fila
 import urllib.parse
 import logging
 import pytz
+import os
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
+
+
+def termos_view(request):
+    """
+    View para exibir os termos de consentimento.
+    """
+    return render(request, 'public/termos.html')
 
 
 def enviar_mensagem_whatsapp(numero, ticket):
@@ -124,6 +134,11 @@ def ticket_novo_view(request, demanda_id):
         
         if not cliente_pix:
             errors.append('Por favor, informe sua chave PIX.')
+        
+        # Validar aceite dos termos
+        aceito_termos = request.POST.get('aceito_termos')
+        if not aceito_termos:
+            errors.append('Você precisa aceitar os termos de consentimento para continuar.')
         
         # Validar arquivo apenas se for enviar agora
         if pode_enviar_agora and not arquivo_prova:
