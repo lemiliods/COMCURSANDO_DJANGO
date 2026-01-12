@@ -17,7 +17,9 @@ def termos_view(request):
     """
     View para exibir os termos de consentimento.
     """
-    return render(request, 'public/termos.html')
+    return render(request, 'public/termos.html', {
+        'whatsapp_contato': settings.WHATSAPP_CONTACT,
+    })
 
 
 def enviar_mensagem_whatsapp(numero, ticket):
